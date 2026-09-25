@@ -1,0 +1,150 @@
+<div>
+
+[**简体中文**](README_zh_CN.md)
+
+</div>
+
+## Tunnio
+
+Tunnio is this repository's branded fork of FlClash, using the rabbit-and-carrot rocket logo.
+The upstream project links and credits below are retained for attribution. Test builds for this fork are available from [GitHub Actions](https://github.com/phungvanquy/Tunnio/actions).
+
+[![Downloads](https://img.shields.io/github/downloads/chen08209/FlClash/total?style=flat-square&logo=github)](https://github.com/chen08209/FlClash/releases/)[![Last Version](https://img.shields.io/github/release/chen08209/FlClash/all.svg?style=flat-square)](https://github.com/chen08209/FlClash/releases/)[![License](https://img.shields.io/github/license/chen08209/FlClash?style=flat-square)](LICENSE)
+
+[![Channel](https://img.shields.io/badge/Telegram-Channel-blue?style=flat-square&logo=telegram)](https://t.me/FlClash)
+
+A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.
+
+<p align="center">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="snapshots/preview-dark.png">
+        <img alt="FlClash on desktop and mobile" src="snapshots/preview.png" width="90%">
+    </picture>
+</p>
+
+## Features
+
+✈️ Multi-platform: Android, Windows, macOS and Linux
+
+💻 Adaptive multiple screen sizes, Multiple color themes available
+
+💡 Based on Material You Design, [Surfboard](https://github.com/getsurfboard/surfboard)-like UI
+
+☁️ Supports data sync via WebDAV
+
+✨ Support subscription link, Dark mode
+
+## Use
+
+### Quick start
+
+1. Import your provider's subscription/configuration URL by QR code, **Paste from clipboard**, or manual entry. A “token” means the complete URL, including its embedded token—not a separate code.
+2. Choose **Auto**, **Fallback**, or a server from Home's single list.
+3. Press the large circular button to connect; press it again to disconnect. Grant VPN/TUN permission if requested.
+
+Connected is green; disconnected is gray. **Test latency** measures the servers and highlights the fastest without changing your selection. Connection transitions and latency tests show progress and prevent repeated submissions.
+
+The app keeps one profile. A successful import replaces it; a failed import keeps your saved setup. The gear opens Settings, including custom routing, configuration editing, backup, and recovery. Subscription/provider-list refresh pauses when Flutter is closed; the current native VPN configuration and health checks continue.
+
+See [VPN setup, routing, and migration](VPN_GUIDE.md) for connection-state meanings and recovery details. Existing preview images above may show the previous interface.
+
+### Linux
+
+⚠️ Make sure to install the following dependencies before using them
+
+   ```bash
+    sudo apt-get install libayatana-appindicator3-dev
+   ```
+
+### Android
+
+Support the following actions
+
+   ```bash
+    com.follow.clash.action.START
+    
+    com.follow.clash.action.STOP
+    
+    com.follow.clash.action.TOGGLE
+   ```
+
+## Download
+
+<a href="https://chen08209.github.io/FlClash-fdroid-repo/repo?fingerprint=789D6D32668712EF7672F9E58DEEB15FBD6DCEEC5AE7A4371EA72F2AAE8A12FD"><img alt="Get it on F-Droid" src="snapshots/get-it-on-fdroid.svg" width="200px"/></a> <a href="https://github.com/chen08209/FlClash/releases"><img alt="Get it on GitHub" src="snapshots/get-it-on-github.svg" width="200px"/></a>
+
+### Homebrew
+
+```bash
+brew tap chen08209/tap
+brew install --cask flclash
+```
+
+## Build
+
+1. Update submodules
+   ```bash
+   git submodule update --init --recursive
+   ```
+
+2. Install `Flutter` and `Golang` environment
+
+3. Build Application
+
+    - android
+
+        1. Install `Android SDK`, `Android NDK`
+
+        2. Set `ANDROID_NDK` environment variable
+
+        3. Run build script
+
+           ```bash
+           dart setup.dart android
+           ```
+
+    - windows
+
+        1. Requires a Windows client
+
+        2. Install `GCC`, `Inno Setup`
+
+        3. Run build script
+
+           ```bash
+           dart setup.dart windows
+           ```
+
+    - linux
+
+        1. Requires a Linux client
+
+        2. Dependencies are auto-installed by setup script, or manually:
+           ```bash
+           sudo apt-get install -y libayatana-appindicator3-dev
+           ```
+
+        3. Run build script
+
+           ```bash
+           dart setup.dart linux
+           ```
+
+    - macOS
+
+        1. Requires a macOS client
+
+        2. Run build script
+
+           ```bash
+           dart setup.dart macos
+           ```
+
+## Star
+
+The easiest way to support developers is to click on the star (⭐) at the top of the page.
+
+<p style="text-align: center;">
+    <a href="https://api.star-history.com/svg?repos=chen08209/FlClash&Date">
+        <img alt="start" width=50% src="https://api.star-history.com/svg?repos=chen08209/FlClash&Date"/>
+    </a>
+</p>

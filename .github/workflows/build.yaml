@@ -1,0 +1,477 @@
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+
+env:
+  IS_STABLE: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') }}
+  FLUTTER_VERSION: '3.47.1'
+  GO_VERSION: '1.26.4'
+  NDK_VERSION: r28c
+
+jobs:
+  dart:
+    name: Dart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Test commit message hook
+        run: bash tool/check_commit_msg_test.sh
+
+      - name: Test comment density hook
+        run: bash tool/check_comment_density_test.sh
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check format
+        run: dart format --output=none --set-exit-if-changed lib test tool plugins setup.dart
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Skip native build hooks
+        run: |
+          yq -i '.hooks.user_defines.setup.build_assets = false | .hooks.user_defines.rust_api.build_assets = false' pubspec.yaml
+
+      - name: Verify changelog
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        run: dart run tool/changelog.dart verify
+
+      - name: Run tests
+        run: flutter test --reporter expanded --coverage
+
+      - name: Check coverage
+        run: dart run tool/check_coverage.dart coverage/lcov.info 75
+
+  plugins:
+    name: Plugins
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Validate local Flutter packages
+        run: bash tool/check_plugins.sh
+
+      - name: Validate setup hooks package
+        working-directory: plugins/setup/setup_hooks
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+
+  go:
+    name: Go core
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: core/go.sum
+
+      - name: Validate Go core wrapper
+        working-directory: core
+        env:
+          CGO_ENABLED: 0
+        run: |
+          if ! compgen -G '*_test.go' > /dev/null; then
+            echo 'No Go tests found in core/; the test step would pass vacuously.' >&2
+            exit 1
+          fi
+          test -z "$(gofmt -l ./*.go ./platform ./tun)" || {
+            gofmt -l ./*.go ./platform ./tun >&2
+            exit 1
+          }
+          go test -count=1 .
+          go vet .
+          GOOS=linux go vet ./platform
+
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: ${{ env.NDK_VERSION }}
+
+      - name: Validate the Android core library
+        working-directory: core
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+        run: |
+          CC="$(echo "$ANDROID_NDK_HOME"/toolchains/llvm/prebuilt/*/bin/aarch64-linux-android21-clang)"
+          test -x "$CC" || { echo "NDK clang not found at $CC" >&2; exit 1; }
+          tags="$(sed -n 's/^tags: *//p' ../build_config.yaml)"
+          test -n "$tags" || { echo 'Could not read tags from build_config.yaml' >&2; exit 1; }
+          export CGO_ENABLED=1 GOOS=android GOARCH=arm64 CC
+          go vet "-tags=$tags" . ./tun ./platform
+
+  xray-interop:
+    name: Xray interoperability
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: core/go.sum
+
+      - name: Check fork compatibility
+        working-directory: core/Clash.Meta
+        env:
+          CGO_ENABLED: 0
+        run: go test -count=1 ./component/tls ./adapter/outbound ./common/convert ./config ./adapter/provider ./rules/provider ./listener ./transport/vless ./transport/vmess
+
+      - name: Test pinned Xray releases
+        env:
+          FLCLASH_INTEROP_CORE: ${{ github.workspace }}/.dart_tool/FlClashCore
+        run: |
+          mkdir -p .dart_tool
+          CGO_ENABLED=0 go build -C core -tags=with_gvisor -o ../.dart_tool/FlClashCore .
+          python3 tool/xray_interop.py | tee xray-interop.log
+
+      - name: Save interoperability results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xray-interop-results
+          path: xray-interop.log
+
+  android:
+    name: Android unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: ${{ env.NDK_VERSION }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Run Android unit tests
+        working-directory: android
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+        run: |
+          {
+            echo "flutter.sdk=$FLUTTER_ROOT"
+            echo "sdk.dir=$ANDROID_HOME"
+          } > local.properties
+          wrapper="$FLUTTER_ROOT/bin/cache/artifacts/gradle_wrapper"
+          test -d "$wrapper" || flutter precache
+          cp -R "$wrapper/." .
+          chmod +x gradlew
+          # `:core` only calls System.loadLibrary; the excluded Flutter tasks would run
+          # the native build hooks for every debug ABI, which no JVM unit test consumes.
+          ./gradlew :common:testDebugUnitTest :service:testDebugUnitTest :app:testDebugUnitTest \
+            -x :app:compileFlutterBuildDebug -x :app:copyFlutterAssetsDebug
+
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            services/helper
+            plugins/rust_api/rust
+
+      - name: Check format
+        run: |
+          cargo fmt --manifest-path services/helper/Cargo.toml -- --check
+          cargo fmt --manifest-path plugins/rust_api/rust/Cargo.toml -- --check
+
+      - name: Run tests
+        run: |
+          cargo test --manifest-path services/helper/Cargo.toml
+          cargo test --manifest-path plugins/rust_api/rust/Cargo.toml
+
+  windows-helper-test:
+    name: Windows helper and import tests
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: services/helper
+
+      - name: Check format
+        run: cargo fmt --manifest-path services/helper/Cargo.toml -- --check
+
+      - name: Run Windows service tests
+        run: cargo test --manifest-path services/helper/Cargo.toml --features windows-service
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: core/go.sum
+
+      - name: Validate fresh Windows Core preparation
+        working-directory: core
+        env:
+          CGO_ENABLED: 0
+        run: |
+          go test -count=1 -run 'TestFreshCandidateUsesBundledGeodata|TestPrepareAndDiscardAreRevisionScoped|TestPreparationFailureDetails' .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go test -c -o "$env:RUNNER_TEMP/preparation.test.exe" .
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Validate Windows profile import and storage
+        shell: bash
+        run: |
+          flutter pub get
+          cp pubspec.yaml "$RUNNER_TEMP/import-test-pubspec.yaml"
+          trap 'cp "$RUNNER_TEMP/import-test-pubspec.yaml" pubspec.yaml' EXIT
+          python -c "from pathlib import Path; p = Path('pubspec.yaml'); p.write_text(p.read_text().replace('build_assets: true', 'build_assets: false'))"
+          flutter test --reporter expanded test/common/request_test.dart test/common/vpn_intake_test.dart test/common/vpn_refresh_test.dart test/common/vpn_staging_test.dart test/common/vpn_coordinator_test.dart test/common/profile_store_test.dart test/providers/vpn_action_test.dart
+          FLCLASH_PREPARATION_TEST_CORE="$RUNNER_TEMP/preparation.test.exe" flutter test --reporter expanded test/integration/vpn_preparation_test.dart
+
+  build:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
+    needs: [ dart, plugins, go, xray-interop, android, rust, windows-helper-test ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: >-
+          ${{ fromJSON(
+            github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') &&
+            '[{"platform":"android","os":"ubuntu-latest"},{"platform":"windows","os":"windows-2022","arch":"amd64"},{"platform":"linux","os":"ubuntu-22.04","arch":"amd64"}]' ||
+            '[{"platform":"android","os":"ubuntu-latest","arch":"arm64","args":"--arch arm64"},{"platform":"windows","os":"windows-2022","arch":"amd64","args":"--targets exe"}]'
+          ) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Android Signing
+        if: matrix.platform == 'android' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [[ -z "$KEYSTORE" ]]; then
+            echo "Android signing secrets are not configured; using the debug signing fallback."
+            exit 0
+          fi
+          for name in KEY_ALIAS STORE_PASSWORD KEY_PASSWORD; do
+            [[ -n "${!name}" ]] || { echo "$name is required when KEYSTORE is set." >&2; exit 1; }
+          done
+          echo "$KEYSTORE" | base64 --decode > android/app/keystore.jks
+          {
+            echo "keyAlias=$KEY_ALIAS"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyPassword=$KEY_PASSWORD"
+          } >> android/local.properties
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: core/go.sum
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.platform }}-${{ matrix.arch || 'all' }}
+          workspaces: services/helper
+          cache-directories: .dart_tool/hooks_runner
+
+      - name: Setup Gradle
+        if: startsWith(matrix.platform,'android')
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Enable git long paths (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: git config --global core.longpaths true
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: master
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Setup Xcode
+        if: startsWith(matrix.platform,'macos')
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.3.app || sudo xcode-select -s /Applications/Xcode_26.2.app
+          xcodebuild -version
+
+      - name: Setup NDK
+        if: startsWith(matrix.platform,'android')
+        uses: nttld/setup-ndk@v1
+        id: build-ndk
+        with:
+          ndk-version: ${{ env.NDK_VERSION }}
+          add-to-path: true
+          link-to-sdk: true
+
+      - name: Get Flutter Dependency
+        run: |
+          flutter --version
+          flutter pub get
+
+      - name: Setup
+        env:
+          ANDROID_NDK_HOME: ${{ steps.build-ndk.outputs.ndk-path }}
+        run: dart setup.dart ${{ matrix.platform }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} ${{ matrix.args }} -v
+
+      - name: Locate test installer
+        if: ${{ !(github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) }}
+        id: test-installer
+        shell: bash
+        env:
+          INSTALLER_EXTENSION: ${{ matrix.platform == 'android' && 'apk' || 'exe' }}
+        run: |
+          shopt -s globstar nullglob
+          installers=(dist/**/*.${INSTALLER_EXTENSION})
+          if [[ "${#installers[@]}" != 1 ]]; then
+            echo "Expected exactly one .$INSTALLER_EXTENSION installer, found ${#installers[@]}." >&2
+            exit 1
+          fi
+          {
+            printf 'path=%s\n' "${installers[0]}"
+            printf 'name=%s\n' "${installers[0]##*/}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Test Windows install, upgrade and data removal
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          try {
+            ./tool/windows_installer_test.ps1
+          } catch {
+            $detail = ($_.Exception.Message + "`n" + $_.ScriptStackTrace).Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error::$detail"
+            exit 1
+          }
+
+      - name: Upload test installer
+        if: ${{ !(github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) }}
+        uses: actions/upload-artifact@v7
+        with:
+          # v7 still uses the supplied name to delete an artifact on reruns.
+          name: ${{ steps.test-installer.outputs.name }}
+          path: ${{ steps.test-installer.outputs.path }}
+          archive: false
+          overwrite: true
+          if-no-files-found: error
+
+      - name: Upload release packages
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.platform }}${{ matrix.arch && format('-{0}', matrix.arch) }}
+          path: ./dist
+          overwrite: true
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          path: ./dist/
+          pattern: artifact-*
+          merge-multiple: true
+
+      - name: Generate sha256
+        run: |
+          cd ./dist
+          sha256sum ./* > SHA256SUMS
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/*
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

@@ -1,0 +1,189 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/core/event.dart';
+import 'package:fl_clash/core/method.dart';
+import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/models/models.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final androidServiceProvider = Provider<Service?>((ref) => service);
+
+abstract mixin class ServiceListener {
+  void onServiceEvent(CoreEvent event) {}
+
+  void onRunState(AndroidRunObservation state) {}
+
+  void onRunStateUnavailable() {}
+}
+
+class Service {
+  static Service? _instance;
+  late MethodChannel methodChannel;
+  AndroidRunObservation? _runState;
+  final Set<String> _retiredSessions = {};
+
+  final ObserverList<ServiceListener> _listeners =
+      ObserverList<ServiceListener>();
+
+  factory Service() {
+    _instance ??= Service._internal();
+    return _instance!;
+  }
+
+  Service._internal() {
+    methodChannel = const MethodChannel('$packageName/service');
+    methodChannel.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'runState':
+          try {
+            final state = AndroidRunObservation.fromJson(
+              Map<String, Object?>.from(
+                jsonDecode(call.arguments as String) as Map,
+              ),
+            );
+            if (state.session.isEmpty || state.revision < 0) {
+              throw const FormatException('Invalid Android run-state event');
+            }
+            _publishRunState(state);
+          } catch (_) {
+            for (final listener in List.of(_listeners)) {
+              try {
+                listener.onRunStateUnavailable();
+              } catch (_) {
+                commonPrint.log(
+                  'Unable to request Android run-state recovery',
+                  logLevel: LogLevel.warning,
+                );
+              }
+            }
+          }
+          break;
+        case 'event':
+          final data = call.arguments as String? ?? '';
+          final methodCall = CoreMethodCall.fromJson(
+            Map<String, Object?>.from(json.decode(data) as Map),
+          );
+          for (final event in coreEventsFromData(methodCall.arguments)) {
+            for (final listener in List.of(_listeners)) {
+              try {
+                listener.onServiceEvent(event);
+              } catch (error) {
+                commonPrint.log(
+                  'Unable to dispatch Android Core event '
+                  '${event.type.name}: $error',
+                  logLevel: LogLevel.error,
+                );
+              }
+            }
+          }
+          break;
+        default:
+          throw MissingPluginException();
+      }
+    });
+  }
+
+  Future<CoreMethodResponse?> invokeMethod(CoreMethodCall call) async {
+    final data = await methodChannel.invokeMethod<String>(
+      'invokeMethod',
+      json.encode(call),
+    );
+    if (data == null) {
+      return null;
+    }
+    final dataJson = await data.decodeJson<dynamic>();
+    return CoreMethodResponse.fromJson(dataJson);
+  }
+
+  Future<bool> start() async {
+    return await methodChannel.invokeMethod<bool>('start') ?? false;
+  }
+
+  Future<bool> stop() async {
+    return await methodChannel.invokeMethod<bool>('stop') ?? false;
+  }
+
+  Future<String> init() async {
+    return await methodChannel.invokeMethod<String>('init') ?? '';
+  }
+
+  Future<String> syncState(SharedState state) async {
+    return await methodChannel.invokeMethod<String>(
+          'syncState',
+          json.encode(state),
+        ) ??
+        '';
+  }
+
+  Future<bool> shutdown() async {
+    return await methodChannel.invokeMethod<bool>('shutdown') ?? true;
+  }
+
+  Future<DateTime?> getRunTime() async {
+    final ms = await methodChannel.invokeMethod<int>('getRunTime') ?? 0;
+    if (ms == 0) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  Future<AndroidRunObservation?> getRunState() async {
+    final data = await methodChannel.invokeMethod<String>('getRunState');
+    if (data == null) return null;
+    final observation = AndroidRunObservation.fromJson(
+      Map<String, Object?>.from(jsonDecode(data) as Map),
+    );
+    if (observation.session.isEmpty || observation.revision < 0) {
+      throw const FormatException('Invalid Android run-state snapshot');
+    }
+    _publishRunState(observation);
+    return _runState;
+  }
+
+  void _publishRunState(AndroidRunObservation state) {
+    final previous = _runState;
+    if (state.session.isEmpty ||
+        state.revision < 0 ||
+        _retiredSessions.contains(state.session)) {
+      return;
+    }
+    if (previous != null) {
+      if (state.session == previous.session &&
+          state.revision <= previous.revision) {
+        return;
+      }
+      if (state.session != previous.session) {
+        _retiredSessions.add(previous.session);
+      }
+    }
+    _runState = state;
+    for (final listener in List.of(_listeners)) {
+      try {
+        listener.onRunState(state);
+      } catch (error) {
+        commonPrint.log(
+          'Unable to dispatch Android run state: ${error.runtimeType}',
+          logLevel: LogLevel.error,
+        );
+      }
+    }
+  }
+
+  bool get hasListeners {
+    return _listeners.isNotEmpty;
+  }
+
+  void addListener(ServiceListener listener) {
+    _listeners.add(listener);
+  }
+
+  void removeListener(ServiceListener listener) {
+    _listeners.remove(listener);
+  }
+}
+
+Service? get service => system.isAndroid ? Service() : null;
