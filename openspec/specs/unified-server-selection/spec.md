@@ -63,15 +63,22 @@ After a successful import the application SHALL show one list containing `Auto`,
 
 ### Requirement: Compact and recognizable server rows
 
-Individual servers SHALL use a country flag when the display name contains an explicit flag, a recognized country name, or an unambiguous supported leading country code. An explicit flag SHALL take precedence over textual hints. Unknown names or multiple conflicting flags/country names SHALL use the same neutral server icon; the app MUST NOT infer location from protocol, provider, or endpoint geolocation. Flags SHALL use the bundled emoji font for consistent platform rendering, remain visible on selection, and leave the original node name and identity intact. Auto and Fallback SHALL retain their mode icons.
+Individual servers SHALL use a country flag when the display name contains an explicit flag, a recognized country name, or an unambiguous supported leading country code. An explicit flag SHALL take precedence over textual hints. Unknown names or multiple conflicting flags/country names SHALL use the same neutral server icon; the app MUST NOT infer location from protocol, provider, or endpoint geolocation. Flags SHALL use the bundled emoji font for consistent platform rendering, remain visible on selection, and leave the stored node name and identity intact. A leading flag already shown in the country icon SHALL be omitted from the visual title only; tooltips and semantics SHALL retain the full original name. Auto and Fallback SHALL retain their mode icons.
 
-Node names SHALL remain the primary row text. Protocol/provider labels SHALL use smaller, normal-weight secondary text. Rows SHALL use compact vertical padding and one logical pixel of inter-row spacing, retain a minimum 60-logical-pixel height, and expand for wrapped names or stacked latency at large text sizes. Selection SHALL remain visible through the selected surface and accessible selected state, independently of the flag or latency color.
+Node names SHALL remain the primary row text and have the full content width available, without a trailing latency badge narrowing the name. At the default 80% text setting, names SHALL render at least 14 logical pixels and protocol/provider labels at least 11 logical pixels. Protocol/provider labels SHALL use smaller, normal-weight secondary text, with latency aligned at the trailing end of that metadata line. Enlarged text SHALL stack latency below the metadata when needed; narrow width alone SHALL NOT force a taller layout. Rows SHALL use compact vertical padding and one logical pixel of inter-row spacing, retain a minimum 60-logical-pixel height, and expand for wrapped names or stacked latency at large text sizes. Selection SHALL remain visible through the selected surface and accessible selected state, independently of the flag or latency color. Each row SHALL own its Material ink surface so selected backgrounds and tap feedback are clipped by the scrolling viewport along with row content.
 
 #### Scenario: Recognized and unknown countries
 
 - **WHEN** the inventory contains `🇯🇵 Tokyo`, `DE Frankfurt`, and `Private relay`
 - **THEN** the first two show Japanese and German flags and the last shows a neutral server icon
 - **AND** selecting any entry preserves its name, identity, country icon, and existing routing behavior
+
+#### Scenario: Android density, text scaling, and scrolling
+
+- **WHEN** Android Home renders at 320–393 logical pixels wide with device-pixel ratio 3, system-bar insets, and text sizes from 80% to 140%
+- **THEN** server names remain readable and do not overlap latency or protocol text
+- **AND** selected-row backgrounds and touch feedback cannot paint over the list heading or into the bottom system-bar inset when the row scrolls out of view
+- **AND** flags are not duplicated at the start of the title and selecting the row still uses its original catalog identity
 
 #### Scenario: Latency test action in the list header
 

@@ -306,7 +306,7 @@ class _ConnectionControlState extends ConsumerState<_ConnectionControl> {
                 child: Text(
                   status,
                   key: const Key('vpn-status'),
-                  style: context.textTheme.titleSmall?.copyWith(
+                  style: context.textTheme.titleMedium?.copyWith(
                     color: connected ? foreground : color,
                     fontWeight: FontWeight.bold,
                   ),
@@ -328,7 +328,7 @@ class _ConnectionControlState extends ConsumerState<_ConnectionControl> {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.bodyMedium?.copyWith(
+                  style: context.textTheme.titleMedium?.copyWith(
                     color: context.colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -358,6 +358,7 @@ class _ConnectionControlState extends ConsumerState<_ConnectionControl> {
           ],
         );
         return Center(
+          heightFactor: 1,
           child: SingleChildScrollView(
             key: const Key('vpn-controls-scroll'),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -676,9 +677,7 @@ class _VpnServerListState extends ConsumerState<VpnServerList> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final stacked =
-                  constraints.maxWidth < 360 ||
-                  MediaQuery.textScalerOf(context).scale(14) > 20;
+              final stacked = MediaQuery.textScalerOf(context).scale(14) > 20;
               return ListView.builder(
                 key: const PageStorageKey('vpn-servers'),
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
@@ -716,80 +715,68 @@ class _VpnServerListState extends ConsumerState<VpnServerList> {
                       child: Tooltip(
                         message: '$title\n$subtitle',
                         excludeFromSemantics: true,
-                        child: ListTile(
-                          key: ValueKey(selection),
+                        child: Material(
+                          color: Colors.transparent,
                           shape: AppShape.xl,
-                          dense: true,
-                          minTileHeight: 60,
-                          minVerticalPadding: 6,
-                          minLeadingWidth: 20,
-                          horizontalTitleGap: 12,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                          ),
-                          selected: selected,
-                          selectedTileColor:
-                              context.colorScheme.secondaryContainer,
-                          title: Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.titleSmall?.copyWith(
-                              fontFamilyFallback: [FontFamily.twEmoji.value],
-                              fontWeight: selected
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
+                          clipBehavior: Clip.antiAlias,
+                          child: ListTile(
+                            key: ValueKey(selection),
+                            shape: AppShape.xl,
+                            dense: true,
+                            minTileHeight: 60,
+                            minVerticalPadding: 6,
+                            minLeadingWidth: 20,
+                            horizontalTitleGap: 12,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
                             ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                subtitle,
-                                maxLines: server == null ? null : 1,
-                                overflow: server == null
-                                    ? null
-                                    : TextOverflow.ellipsis,
-                                style: context.textTheme.bodySmall?.copyWith(
-                                  color: context.colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.normal,
-                                ),
+                            selected: selected,
+                            selectedTileColor:
+                                context.colorScheme.secondaryContainer,
+                            title: Text(
+                              server == null ? title : serverDisplayName(title),
+                              semanticsLabel: title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.titleMedium?.copyWith(
+                                fontSize: 18,
+                                fontFamilyFallback: [FontFamily.twEmoji.value],
+                                fontWeight: selected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
                               ),
-                              if (stacked && measurement != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: measurement,
-                                ),
-                            ],
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: _ServerDetails(
+                                subtitle: subtitle,
+                                wrapSubtitle: server == null,
+                                stacked: stacked,
+                                measurement: measurement,
+                              ),
+                            ),
+                            leading: server != null
+                                ? _ServerLocation(name: server.name)
+                                : Icon(
+                                    selected
+                                        ? Icons.check_circle
+                                        : index == 0
+                                        ? Icons.auto_awesome
+                                        : Icons.swap_calls,
+                                    size: 20,
+                                  ),
+                            trailing: _pending == selection
+                                ? const SizedBox.square(
+                                    dimension: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : null,
+                            onTap: _pending == selection || transitioning
+                                ? null
+                                : () => _select(selection),
                           ),
-                          leading: server != null
-                              ? _ServerLocation(name: server.name)
-                              : Icon(
-                                  selected
-                                      ? Icons.check_circle
-                                      : index == 0
-                                      ? Icons.auto_awesome
-                                      : Icons.swap_calls,
-                                  size: 20,
-                                ),
-                          trailing: _pending == selection
-                              ? const SizedBox.square(
-                                  dimension: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : !stacked && measurement != null
-                              ? ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 132,
-                                  ),
-                                  child: measurement,
-                                )
-                              : null,
-                          onTap: _pending == selection || transitioning
-                              ? null
-                              : () => _select(selection),
                         ),
                       ),
                     ),
@@ -797,6 +784,52 @@ class _VpnServerListState extends ConsumerState<VpnServerList> {
                 },
               );
             },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ServerDetails extends StatelessWidget {
+  const _ServerDetails({
+    required this.subtitle,
+    required this.wrapSubtitle,
+    required this.stacked,
+    required this.measurement,
+  });
+
+  final String subtitle;
+  final bool wrapSubtitle;
+  final bool stacked;
+  final Widget? measurement;
+
+  @override
+  Widget build(BuildContext context) {
+    final description = Text(
+      subtitle,
+      maxLines: wrapSubtitle ? null : 1,
+      overflow: wrapSubtitle ? null : TextOverflow.ellipsis,
+      style: context.textTheme.bodyMedium?.copyWith(
+        color: context.colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.normal,
+      ),
+    );
+    if (measurement == null) return description;
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [description, const SizedBox(height: 4), measurement!],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: description),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: measurement!,
           ),
         ),
       ],

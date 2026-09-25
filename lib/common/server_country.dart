@@ -67,3 +67,11 @@ String? serverCountryFlag(String name) {
     countries.single.codeUnits.map((letter) => letter + 0x1F1A5),
   );
 }
+
+String serverDisplayName(String name) {
+  final trimmed = name.trimLeft();
+  final flag = _flagPattern.matchAsPrefix(trimmed);
+  if (flag == null || serverCountryFlag(name) == null) return name;
+  final label = trimmed.substring(flag.end).trimLeft();
+  return label.isEmpty ? name : label;
+}

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
+import 'package:fl_clash/manager/theme_manager.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/home.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -10,6 +12,7 @@ import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/profiles/profiles.dart';
 import 'package:fl_clash/views/tools.dart';
 import 'package:fl_clash/widgets/vpn_import.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -188,9 +191,36 @@ void main() {
     double scale = 1,
     bool dark = false,
     bool reducedMotion = false,
+    bool android = false,
   }) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = size;
+    final pixelRatio = android ? 3.0 : 1.0;
+    tester.view.devicePixelRatio = pixelRatio;
+    tester.view.physicalSize = size * pixelRatio;
+    if (android) {
+      final subscription = container.listen(themeSettingProvider, (_, _) {});
+      addTearDown(subscription.close);
+      container
+          .read(themeSettingProvider.notifier)
+          .update(
+            (state) => state.copyWith(textScale: TextScale(scale: scale)),
+          );
+    }
+    final screen = android
+        ? Theme(
+            data: ThemeData(
+              platform: TargetPlatform.android,
+              useMaterial3: true,
+              colorScheme: container.read(
+                genColorSchemeProvider(
+                  dark ? Brightness.dark : Brightness.light,
+                ),
+              ),
+            ).withAppShapes,
+            child: const ThemeManager(child: HomePage()),
+          )
+        : dark
+        ? Theme(data: ThemeData.dark(), child: const HomePage())
+        : const HomePage();
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     container.read(viewSizeProvider.notifier).value = size;
@@ -201,12 +231,20 @@ void main() {
           child: MediaQuery(
             data: MediaQueryData(
               size: size,
+              devicePixelRatio: pixelRatio,
+              padding: android
+                  ? const EdgeInsets.only(top: 24, bottom: 24)
+                  : EdgeInsets.zero,
+              viewPadding: android
+                  ? const EdgeInsets.only(top: 24, bottom: 24)
+                  : EdgeInsets.zero,
               textScaler: TextScaler.linear(scale),
               disableAnimations: reducedMotion,
             ),
-            child: dark
-                ? Theme(data: ThemeData.dark(), child: const HomePage())
-                : const HomePage(),
+            child: RepaintBoundary(
+              key: const Key('home-render'),
+              child: screen,
+            ),
           ),
         ),
       ),
@@ -749,6 +787,145 @@ void main() {
       expect(setup.requests, isEmpty);
     },
   );
+
+  for (final edge in ['top', 'bottom']) {
+    homeTest('selected Android row is clipped at the $edge of the list', (
+      tester,
+    ) async {
+      setProfile(
+        configured(
+          count: 30,
+        ).copyWith.snapshot(selection: const VpnSelection.server('server-5')),
+      );
+      await pump(
+        tester,
+        size: const Size(360, 800),
+        scale: .8,
+        android: true,
+        dark: true,
+      );
+      await tester.pumpAndSettle();
+      final list = find.byKey(const PageStorageKey('vpn-servers'));
+      final scrollable = find.descendant(
+        of: list,
+        matching: find.byType(Scrollable),
+      );
+      final row = find.byKey(const ValueKey(VpnSelection.server('server-5')));
+      await tester.scrollUntilVisible(row, 120, scrollable: scrollable);
+      await tester.pumpAndSettle();
+      final viewport = tester.getRect(list);
+      final position = tester.state<ScrollableState>(scrollable).position;
+      final target = (edge == 'top' ? viewport.top : viewport.bottom) - 20;
+      position.jumpTo(position.pixels + tester.getRect(row).top - target);
+      await tester.pumpAndSettle();
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(const Key('home-render')),
+      );
+      expect(row, findsOneWidget);
+      final clippedRow = tester.getRect(row);
+      final edgeY = edge == 'top' ? viewport.top : viewport.bottom;
+      expect(clippedRow.top, lessThan(edgeY));
+      expect(clippedRow.bottom, greaterThan(edgeY));
+      final expected = Theme.of(tester.element(list)).scaffoldBackgroundColor;
+      final actual = await tester.runAsync(() async {
+        final image = await boundary.toImage();
+        try {
+          final bytes = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!;
+          final x = viewport.center.dx.floor();
+          final y = edge == 'top'
+              ? viewport.top.floor() - 4
+              : viewport.bottom.ceil() + 4;
+          final offset = (y * image.width + x) * 4;
+          return Color.fromARGB(
+            bytes.getUint8(offset + 3),
+            bytes.getUint8(offset),
+            bytes.getUint8(offset + 1),
+            bytes.getUint8(offset + 2),
+          );
+        } finally {
+          image.dispose();
+        }
+      });
+      expect(actual, expected);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final size in [
+    const Size(320, 640),
+    const Size(360, 800),
+    const Size(393, 851),
+  ]) {
+    for (final scale in [.8, 1.4]) {
+      homeTest('Android server text and latency fit at $size scale=$scale', (
+        tester,
+      ) async {
+        final base = configured();
+        final profile = base.copyWith.snapshot(
+          servers: [
+            base.snapshot.servers.first.copyWith(
+              name: 'DE Frankfurt Premium Reality Server 01',
+            ),
+          ],
+        );
+        setProfile(profile);
+        await pump(tester, size: size, scale: scale, dark: true, android: true);
+        latency.publish(
+          const VpnLatencyState(
+            results: {
+              'server-0': VpnNodeLatency(VpnLatencyStatus.measured, 156),
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+        final row = find.byKey(const ValueKey(VpnSelection.server('server-0')));
+        await tester.scrollUntilVisible(
+          row,
+          120,
+          scrollable: find.descendant(
+            of: find.byKey(const PageStorageKey('vpn-servers')),
+            matching: find.byType(Scrollable),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final title = find.text('DE Frankfurt Premium Reality Server 01');
+        final protocol = find.text('Vless');
+        final measurement = find.text('156 ms');
+        final scaler = MediaQuery.textScalerOf(tester.element(title));
+        expect(
+          scaler.scale(tester.widget<Text>(title).style!.fontSize!),
+          greaterThanOrEqualTo(14),
+        );
+        expect(
+          scaler.scale(tester.widget<Text>(protocol).style!.fontSize!),
+          greaterThanOrEqualTo(11),
+        );
+        expect(
+          tester.getSize(title).width,
+          greaterThanOrEqualTo(tester.getSize(row).width - 90),
+        );
+        expect(
+          tester.getRect(title).bottom,
+          lessThanOrEqualTo(tester.getRect(measurement).top),
+        );
+        expect(
+          tester.getRect(protocol).overlaps(tester.getRect(measurement)),
+          isFalse,
+        );
+        expect(
+          tester.getRect(row).contains(tester.getRect(measurement).bottomRight),
+          isTrue,
+        );
+        await tester.tap(title);
+        await tester.pumpAndSettle();
+        expect(proxies.selections, [const VpnSelection.server('server-0')]);
+        expect(setup.requests, isEmpty);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 
   for (final size in [
     const Size(320, 568),
