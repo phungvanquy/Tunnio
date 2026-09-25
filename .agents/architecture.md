@@ -643,7 +643,7 @@ Windows helper integrity/version check:
 Build configuration defaults live in `plugins/setup/setup_hooks/lib/src/options.dart` and can be overridden via the root
 `build_config.yaml`.
 
-Architecture detection is automatic. The `--description` flag passed to `flutter_distributor` adds arch suffixes to artifact names, such as `Tunnio-0.8.99-macos-arm64.dmg`.
+Architecture detection is automatic. The `--description` flag passed to `flutter_distributor` adds arch suffixes to artifact names, such as `Tunnio-1.0.0-macos-arm64.dmg`.
 
 #### Android Native Task Ordering
 

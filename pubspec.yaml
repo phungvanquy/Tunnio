@@ -4,7 +4,7 @@ homepage: https://github.com/phungvanquy/Tunnio
 repository: https://github.com/phungvanquy/Tunnio
 issue_tracker: https://github.com/phungvanquy/Tunnio/issues
 publish_to: 'none'
-version: 0.8.99+2026092101
+version: 1.0.0+2026092501
 environment:
   sdk: '>=3.10.0 <4.0.0'
 
