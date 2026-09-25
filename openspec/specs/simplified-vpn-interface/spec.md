@@ -111,7 +111,14 @@ Android SHALL offer live camera QR scanning and image import. Desktop SHALL offe
 
 ### Requirement: Focused main screen
 
-With a usable profile, Home SHALL prominently display a compact circular connect/disconnect button, a text connection status, the selected target, and the unified server list. Phones SHALL use a compact connection header; wide and short landscape windows SHALL place controls beside the list. Control and inventory regions SHALL scroll independently when necessary. Node rows SHALL use consistent compact spacing and typography without reducing interactive targets below 48 logical pixels; names, selection, and latency MUST remain readable. Wide Home and top-level Settings content SHALL have bounded widths. Dashboard customization, traffic charts, routing toggles, profile lists, and diagnostic tools MUST NOT occupy the default Home surface.
+With a usable profile, Home SHALL prominently display a compact circular connect/disconnect button, a text connection status, the selected target, and the unified server list. The power button, profile name, and text status SHALL form one horizontally centered vertical block, without a redundant visible Connect/Disconnect action label. The power button SHALL retain its localized action name for assistive technology and tooltips. Phones SHALL use a compact connection header; wide and short landscape windows SHALL place controls beside the list. Control and inventory regions SHALL scroll independently when necessary. Node rows SHALL use consistent compact spacing and typography without reducing interactive targets below 48 logical pixels; names, selection, and latency MUST remain readable. Wide Home and top-level Settings content SHALL have bounded widths. Dashboard customization, traffic charts, routing toggles, profile lists, and diagnostic tools MUST NOT occupy the default Home surface.
+
+#### Scenario: Centered mobile connection controls
+
+- **WHEN** Home displays a configured profile at common phone widths from 320 through 430 logical pixels, in either Connected or Disconnected state
+- **THEN** the power button, profile name, and status share a horizontal center, with no visible Connect/Disconnect label
+- **AND** the accessible power action, Settings, profile replacement, and server selection remain available
+- **AND** long profile names truncate with the full name available by tooltip and semantics, while large text can scroll within the controls region
 
 #### Scenario: Long server list
 
@@ -203,9 +210,9 @@ Fresh application settings SHALL use dark mode, a muted teal seed color (`#4F9D9
 
 ### Requirement: Prominent successful connection and latency feedback
 
-Confirmed VPN connection SHALL use a bright green circular control and status badge with contrasting text/icons in light and dark themes, independently of the accent palette. Measured node latency SHALL use compact body-medium (14 logical pixels before text scaling), medium-weight milliseconds text on a contrasting badge with compact padding. The fastest successful measurement SHALL have a subtle accent border without a separate Fastest label. Timeout, unreachable, failure, and untested labels SHALL remain explicit and localized; fastest highlighting MUST NOT change selection. Layouts MUST remain usable at the default 80% scale and with large text on narrow screens; interactive targets SHALL remain at least 48 logical pixels.
+Confirmed VPN connection SHALL use a restrained green circular control and status badge with contrasting text/icons in light and dark themes, independently of the accent palette. Measured node latency SHALL use compact body-medium (14 logical pixels before text scaling), medium-weight milliseconds text on a contrasting badge with compact padding. The fastest successful measurement SHALL have a subtle accent border without a separate Fastest label. Measured delay badges SHALL be green below 100 ms, yellow from 100 through 250 ms inclusive, and red above 250 ms, with readable foreground contrast in light and dark themes. Testing, timeout, unreachable, failure, and untested labels SHALL use neutral styling and remain explicit and localized; fastest highlighting MUST NOT change selection. Layouts MUST remain usable at the default 80% scale and with large text on narrow screens; interactive targets SHALL remain at least 48 logical pixels.
 
-The confirmed-connected button SHALL have a soft, non-pulsing green glow adapted to the theme. Color, shadow, and ordinary status-size transitions SHALL be subtle and short, without delaying observed status text, errors, or action guards. Reduced-motion preferences SHALL disable decorative transitions and replace the connection/latency-toolbar spinning progress indicator with a static busy indicator. Leaving Connected SHALL remove the connected glow; an error MUST remain immediately visible even during an interrupted transition.
+The disconnected power button SHALL have a subtle dark gray background with a contrasting power icon in both themes and no glow. The confirmed-connected button SHALL have a soft, non-pulsing green glow adapted to the theme. Color, shadow, and ordinary status-size transitions SHALL be subtle and short, without delaying observed status text, errors, or action guards. Reduced-motion preferences SHALL disable decorative transitions and replace the connection/latency-toolbar spinning progress indicator with a static busy indicator. Leaving Connected SHALL remove the connected glow; an error MUST remain immediately visible even during an interrupted transition.
 
 #### Scenario: Theme and motion preferences
 
@@ -216,7 +223,7 @@ The confirmed-connected button SHALL have a soft, non-pulsing green glow adapted
 #### Scenario: Read connected feedback and measured latency
 
 - **WHEN** native observations confirm a VPN connection and latency testing returns a measurement
-- **THEN** the connect control and status badge are bright green, the measured milliseconds are readable in compact badges, and the fastest result has an accent border without extra text
+- **THEN** the connect control and status badge use restrained green, the measured milliseconds are readable in compact badges, and the fastest result has an accent border without extra text
 - **AND** disconnecting removes the connected presentation only according to actual state transitions
 
 #### Scenario: Desktop falls back to proxy-only operation

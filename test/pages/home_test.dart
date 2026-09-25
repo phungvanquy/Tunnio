@@ -318,7 +318,7 @@ void main() {
         .resolve({});
     Color? statusColor() =>
         tester.widget<Text>(find.byKey(const Key('vpn-status'))).style!.color;
-    expect(buttonColor(), Colors.grey.shade800);
+    expect(buttonColor(), const Color(0xFF35383C));
     expect(statusColor(), Colors.grey.shade800);
     container
         .read(coreRunStateProvider.notifier)
@@ -332,14 +332,14 @@ void main() {
           ),
         );
     await tester.pump();
-    expect(buttonColor(), const Color(0xFF00C853));
-    expect(statusColor(), Colors.black);
+    expect(buttonColor(), const Color(0xFF2E7D5B));
+    expect(statusColor(), Colors.white);
     final badge = tester.widget<Container>(
       find.byKey(const Key('vpn-status-indicator')),
     );
     expect(
       (badge.decoration! as ShapeDecoration).color,
-      const Color(0xFF00C853),
+      const Color(0xFF2E7D5B),
     );
     expect(find.byIcon(Icons.shield), findsOneWidget);
   });
@@ -376,7 +376,12 @@ void main() {
       setup.statusGate = Completer<void>();
       await pump(tester);
       expect(find.text('Connect'), findsNothing);
-      expect(find.text('Disconnect'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is Tooltip && widget.message == 'Disconnect',
+        ),
+        findsOneWidget,
+      );
       final retry = find.byKey(const Key('vpn-retry-status'));
       await tester.tap(retry);
       await tester.pump();
@@ -516,7 +521,7 @@ void main() {
     final style = tester
         .widget<FilledButton>(find.byKey(const Key('vpn-connect')))
         .style!;
-    expect(style.backgroundColor!.resolve({}), const Color(0xFF00C853));
+    expect(style.backgroundColor!.resolve({}), const Color(0xFF81C9A3));
     expect(style.foregroundColor!.resolve({}), Colors.black);
   });
 
@@ -530,8 +535,9 @@ void main() {
       expect(find.text('Not tested'), findsWidgets);
       await tester.tap(button);
       await tester.pump();
-      expect(tester.widget<TextButton>(button).onPressed, isNull);
-      expect(find.text('Testing…'), findsOneWidget);
+      expect(tester.widget<IconButton>(button).onPressed, isNull);
+      expect(find.byTooltip('Testing…'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
       await tester.tap(button);
       expect(latency.calls, 1);
       latency.gate!.complete();
@@ -644,6 +650,165 @@ void main() {
     expect(tester.getCenter(find.byKey(const Key('vpn-connect'))), before);
     expect(find.text('Auto'), findsNothing);
   });
+
+  for (final dark in [false, true]) {
+    homeTest('latency thresholds and unavailable results in dark=$dark', (
+      tester,
+    ) async {
+      setProfile(configured(count: 10));
+      await pump(tester, size: const Size(1000, 1200), dark: dark);
+      latency.publish(
+        const VpnLatencyState(
+          results: {
+            'server-0': VpnNodeLatency(VpnLatencyStatus.measured, 0),
+            'server-1': VpnNodeLatency(VpnLatencyStatus.measured, 99),
+            'server-2': VpnNodeLatency(VpnLatencyStatus.measured, 100),
+            'server-3': VpnNodeLatency(VpnLatencyStatus.measured, 250),
+            'server-4': VpnNodeLatency(VpnLatencyStatus.measured, 251),
+            'server-5': VpnNodeLatency(VpnLatencyStatus.timeout),
+            'server-6': VpnNodeLatency(VpnLatencyStatus.unreachable),
+            'server-7': VpnNodeLatency(VpnLatencyStatus.failed),
+            'server-8': VpnNodeLatency(VpnLatencyStatus.testing),
+          },
+        ),
+      );
+      await tester.pump();
+      for (final entry in {
+        '0 ms': Colors.green,
+        '99 ms': Colors.green,
+        '100 ms': Colors.yellow,
+        '250 ms': Colors.yellow,
+        '251 ms': Colors.red,
+      }.entries) {
+        final value = find.text(entry.key);
+        final badge = tester.widget<Container>(
+          find.ancestor(of: value, matching: find.byType(Container)).first,
+        );
+        final background = (badge.decoration! as ShapeDecoration).color!;
+        final foreground = tester.widget<Text>(value).style!.color!;
+        expect(
+          background,
+          entry.value == Colors.yellow
+              ? (dark ? const Color(0xFF4A3B00) : const Color(0xFFFFF3B0))
+              : dark
+              ? entry.value.shade900
+              : entry.value.shade100,
+        );
+        final luminances = [
+          background.computeLuminance(),
+          foreground.computeLuminance(),
+        ]..sort();
+        expect(
+          (luminances.last + .05) / (luminances.first + .05),
+          greaterThanOrEqualTo(4.5),
+        );
+      }
+      final neutral = Theme.of(
+        tester.element(find.text('Not tested')),
+      ).colorScheme;
+      for (final label in [
+        'Not tested',
+        'Testing…',
+        'Timed out',
+        'Unreachable',
+        'Test failed',
+      ]) {
+        expect(
+          tester.widget<Text>(find.text(label)).style!.color,
+          neutral.onSurfaceVariant,
+        );
+      }
+    });
+  }
+
+  homeTest(
+    'country flags remain visible after selection with a neutral fallback',
+    (tester) async {
+      final profile = configured();
+      setProfile(
+        profile.copyWith.snapshot(
+          servers: [
+            profile.snapshot.servers[0].copyWith(name: '🇯🇵 Tokyo'),
+            profile.snapshot.servers[1].copyWith(name: 'DE Frankfurt'),
+            profile.snapshot.servers[2].copyWith(name: 'Private relay'),
+          ],
+        ),
+      );
+      await pump(tester);
+      expect(find.text('🇯🇵'), findsOneWidget);
+      expect(find.text('🇩🇪'), findsOneWidget);
+      expect(find.byIcon(Icons.dns_outlined), findsOneWidget);
+      await tester.tap(find.text('DE Frankfurt'));
+      await tester.pump();
+      expect(proxies.selections, [const VpnSelection.server('server-1')]);
+      expect(find.text('🇩🇪'), findsOneWidget);
+      final row = tester.widget<ListTile>(
+        find.byKey(const ValueKey(VpnSelection.server('server-1'))),
+      );
+      expect(row.selected, isTrue);
+      expect(setup.requests, isEmpty);
+    },
+  );
+
+  for (final size in [
+    const Size(320, 568),
+    const Size(360, 800),
+    const Size(390, 844),
+    const Size(430, 932),
+  ]) {
+    for (final connected in [false, true]) {
+      homeTest('centered connection block at $size connected=$connected', (
+        tester,
+      ) async {
+        setProfile(configured());
+        container
+            .read(coreRunStateProvider.notifier)
+            .observe(
+              CoreRunObservation(
+                session: 'layout',
+                revision: 1,
+                active: connected,
+                tun: connected,
+              ),
+            );
+        await pump(tester, size: size);
+        final button = find.byKey(const Key('vpn-connect'));
+        final profile = find.text('My VPN');
+        final status = find.byKey(const Key('vpn-status-indicator'));
+        for (final element in [button, profile, status]) {
+          expect(tester.getCenter(element).dx, closeTo(size.width / 2, 1));
+        }
+        expect(
+          tester.getBottomLeft(button).dy,
+          lessThan(tester.getTopLeft(profile).dy),
+        );
+        expect(
+          tester.getBottomLeft(profile).dy,
+          lessThan(tester.getTopLeft(status).dy),
+        );
+        expect(find.text('Connect'), findsNothing);
+        expect(find.text('Disconnect'), findsNothing);
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Tooltip &&
+                widget.message == (connected ? 'Disconnect' : 'Connect'),
+          ),
+          findsOneWidget,
+        );
+        final testButton = find.byKey(const Key('vpn-test-latency'));
+        expect(
+          tester.getSize(testButton).shortestSide,
+          greaterThanOrEqualTo(48),
+        );
+        expect(
+          tester.getCenter(testButton).dy,
+          closeTo(tester.getCenter(find.text('Servers')).dy, 1),
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 
   for (final size in [
     const Size(320, 568),
@@ -845,7 +1010,7 @@ void main() {
     final list = tester.getRect(
       find.byKey(const PageStorageKey('vpn-servers')),
     );
-    expect(control.height, lessThanOrEqualTo(220));
+    expect(control.height, lessThanOrEqualTo(240));
     expect(list.height, greaterThan(control.height * 2));
     final row = find.byKey(const ValueKey(VpnSelection.server('server-0')));
     expect(tester.getSize(row).height, inInclusiveRange(48, 80));

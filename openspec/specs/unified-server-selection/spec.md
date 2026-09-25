@@ -8,19 +8,20 @@ Provide one understandable server selection that consistently controls the defau
 
 ### Requirement: Explicit non-disruptive node latency testing
 
-Home SHALL show each individual node's measured latency in milliseconds or an explicit Not tested, Testing, Timed out, Unreachable, or Test failed state. A labeled Test latency action SHALL test the committed inventory with bounded concurrency. One batch SHALL run at a time, with progress and repeated submissions disabled. Queue/channel/Core failures SHALL be distinguished from a contacted node's timeout or unreachable result. Results SHALL be scoped to the configuration generation and test URL; completion after replacement, Core loss, or disposal MUST NOT overwrite newer results.
+Home SHALL show each individual node's measured latency in milliseconds or an explicit Not tested, Testing, Timed out, Unreachable, or Test failed state. A Test latency icon button beside the Servers heading SHALL test the committed inventory with bounded concurrency. It SHALL have a localized tooltip and accessible name, a touch target of at least 48 logical pixels, and an in-place progress indicator with a Testing accessible label while running. One batch SHALL run at a time, with progress and repeated submissions disabled. Queue/channel/Core failures SHALL be distinguished from a contacted node's timeout or unreachable result. Results SHALL be scoped to the configuration generation and test URL; completion after replacement, Core loss, or disposal MUST NOT overwrite newer results.
 
 Manual tests SHALL NOT write the selected server/mode, restart listeners, close active traffic connections, or connect a disconnected VPN. Auto/Fallback SHALL remain modes, not be relabeled as individual measurements; existing health-check-based behavior remains in effect. The fastest measured node SHALL be highlighted without reordering the user's list or changing selection. Latency is a probe result, not a guarantee of internet access or throughput.
 
 #### Scenario: Normal and slow results
 
 - **WHEN** available nodes respond with different delays
-- **THEN** each delay is displayed in a compact milliseconds badge and the fastest successful result has a subtle accent border without a Fastest text label, reordering, or changing selection
+- **THEN** each delay is displayed in a compact milliseconds badge: green below 100 ms, yellow from 100 through 250 ms inclusive, and red above 250 ms
+- **AND** the fastest successful result has a subtle accent border without a Fastest text label, reordering, or changing selection
 
 #### Scenario: Offline, timeout, or infrastructure failure
 
 - **WHEN** a probe cannot connect, exceeds its probe deadline, or receives no usable Core response
-- **THEN** it respectively displays Unreachable, Timed out, or Test failed; progress always ends and retry is available
+- **THEN** it respectively displays Unreachable, Timed out, or Test failed with neutral styling; progress always ends and retry is available
 
 #### Scenario: Repeated tests and replacement
 
@@ -59,6 +60,24 @@ After a successful import the application SHALL show one list containing `Auto`,
 
 - **WHEN** a real server is named Auto or Fallback
 - **THEN** it remains distinguishable from the app's automatic choice and selecting either targets the correct entity
+
+### Requirement: Compact and recognizable server rows
+
+Individual servers SHALL use a country flag when the display name contains an explicit flag, a recognized country name, or an unambiguous supported leading country code. An explicit flag SHALL take precedence over textual hints. Unknown names or multiple conflicting flags/country names SHALL use the same neutral server icon; the app MUST NOT infer location from protocol, provider, or endpoint geolocation. Flags SHALL use the bundled emoji font for consistent platform rendering, remain visible on selection, and leave the original node name and identity intact. Auto and Fallback SHALL retain their mode icons.
+
+Node names SHALL remain the primary row text. Protocol/provider labels SHALL use smaller, normal-weight secondary text. Rows SHALL use compact vertical padding and one logical pixel of inter-row spacing, retain a minimum 60-logical-pixel height, and expand for wrapped names or stacked latency at large text sizes. Selection SHALL remain visible through the selected surface and accessible selected state, independently of the flag or latency color.
+
+#### Scenario: Recognized and unknown countries
+
+- **WHEN** the inventory contains `🇯🇵 Tokyo`, `DE Frankfurt`, and `Private relay`
+- **THEN** the first two show Japanese and German flags and the last shows a neutral server icon
+- **AND** selecting any entry preserves its name, identity, country icon, and existing routing behavior
+
+#### Scenario: Latency test action in the list header
+
+- **WHEN** a user starts testing from the named icon beside Servers
+- **THEN** the icon becomes progress, announces Testing, and prevents repeated submission until the batch ends
+- **AND** untested, unavailable, and pending results keep neutral badges rather than implying a measured delay category
 
 ### Requirement: Automatic modes have defined behavior
 
