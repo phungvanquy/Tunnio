@@ -39,6 +39,14 @@ void main() {
     expect(received, ['https://example.com/a.yaml']);
   });
 
+  test('Tunnio links reach the existing profile import path', () async {
+    await listen();
+
+    await emit('tunnio://install-config?url=https://example.com/a.yaml');
+
+    expect(received, ['https://example.com/a.yaml']);
+  });
+
   test('an install-config link without a url is ignored', () async {
     await listen();
 

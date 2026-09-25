@@ -19,7 +19,7 @@ $fixtureKey = "HKCU:\$fixtureName"
 $hiveLoaded = $false
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $approvedKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'
-$protocolKeys = @('flclash', 'clashmeta', 'clash') | ForEach-Object { "HKCU:\Software\Classes\$_" }
+$protocolKeys = @('flclash', 'clashmeta', 'tunnio', 'clash') | ForEach-Object { "HKCU:\Software\Classes\$_" }
 $bases = @(
     [Environment]::GetFolderPath('ApplicationData'),
     [Environment]::GetFolderPath('LocalApplicationData'),
@@ -46,8 +46,12 @@ try {
     Set-Content -LiteralPath $export -Value 'user export'
     $arguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$installation`"")
     Invoke-Installer $installers[0].FullName $arguments
-    $executable = Join-Path $installation 'FlClash.exe'
+    $executable = Join-Path $installation 'Tunnio.exe'
     if (-not (Test-Path -LiteralPath $executable)) { throw 'The app was not installed.' }
+    $legacyExecutable = Join-Path $installation 'FlClash.exe'
+    foreach ($name in @('FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe')) {
+        Copy-Item -LiteralPath (Join-Path $installation $name.Replace('FlClash', 'Tunnio')) -Destination (Join-Path $installation $name)
+    }
     foreach ($path in $dataDirectories) {
         New-Item -ItemType Directory -Path $path -Force | Out-Null
         Set-Content -LiteralPath (Join-Path $path 'shared_preferences.json') -Value '{}'
@@ -71,15 +75,26 @@ try {
     $hiveLoaded = $true
     foreach ($key in $protocolKeys) {
         New-Item -Path "$key\shell\open\command" -Force | Out-Null
-        $owner = if ($key.EndsWith('\clash')) { 'C:\OtherApp\Other.exe' } else { $executable }
+        $owner = if ($key.EndsWith('\clash')) { 'C:\OtherApp\Other.exe' } else { $legacyExecutable }
         Set-Item -Path "$key\shell\open\command" -Value "`"$owner`" `"%1`""
     }
     if (-not (Test-Path -LiteralPath $runKey)) { New-Item -Path $runKey -Force | Out-Null }
-    New-ItemProperty -Path $runKey -Name FlClash -Value $executable | Out-Null
+    New-ItemProperty -Path $runKey -Name FlClash -Value $legacyExecutable | Out-Null
     New-Item -Path $approvedKey -Force | Out-Null
     New-ItemProperty -Path $approvedKey -Name FlClash -PropertyType Binary -Value ([byte[]](2, 0, 0, 0)) | Out-Null
 
     Invoke-Installer $installers[0].FullName $arguments
+    if ((Get-ItemPropertyValue -LiteralPath $runKey -Name FlClash) -ne $executable) {
+        throw 'Upgrade did not migrate the startup executable.'
+    }
+    foreach ($key in $protocolKeys[0..2]) {
+        if ((Get-Item -LiteralPath "$key\shell\open\command").GetValue('') -ne "`"$executable`" `"%1`"") {
+            throw "Upgrade did not migrate protocol: $key"
+        }
+    }
+    foreach ($name in @('FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe')) {
+        if (Test-Path -LiteralPath (Join-Path $installation $name)) { throw "Upgrade retained legacy binary: $name" }
+    }
     foreach ($path in $dataDirectories) {
         if (-not (Test-Path (Join-Path $path 'profiles\generations\saved.yaml'))) {
             throw "Upgrade deleted saved data: $path"
@@ -94,10 +109,10 @@ try {
     if (Test-Path -LiteralPath $executable) { throw 'Uninstall retained the executable.' }
     if (-not (Test-Path -LiteralPath $export)) { throw 'Uninstall followed a junction into an export.' }
     if (-not (Test-Path (Join-Path $sibling 'keep.txt'))) { throw 'Uninstall deleted another app.' }
-    foreach ($key in $protocolKeys[0..1]) {
+    foreach ($key in $protocolKeys[0..2]) {
         if (Test-Path -LiteralPath $key) { throw "Uninstall retained protocol: $key" }
     }
-    if (-not (Test-Path -LiteralPath $protocolKeys[2])) { throw 'Uninstall deleted another protocol owner.' }
+    if (-not (Test-Path -LiteralPath $protocolKeys[3])) { throw 'Uninstall deleted another protocol owner.' }
     foreach ($key in @($runKey, $approvedKey)) {
         if (Get-ItemProperty -LiteralPath $key -Name FlClash -ErrorAction SilentlyContinue) {
             throw "Uninstall retained startup registration: $key"

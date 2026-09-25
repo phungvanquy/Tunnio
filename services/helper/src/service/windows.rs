@@ -166,7 +166,7 @@ fn install_service() -> Result<()> {
     let executable_path = std::env::current_exe().context("resolve helper executable path")?;
     let service_info = ServiceInfo {
         name: OsString::from(SERVICE_NAME),
-        display_name: OsString::from(SERVICE_NAME),
+        display_name: OsString::from("Tunnio Helper Service"),
         service_type: SERVICE_TYPE,
         start_type: ServiceStartType::AutoStart,
         error_control: ServiceErrorControl::Normal,

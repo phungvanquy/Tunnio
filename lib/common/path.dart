@@ -33,13 +33,13 @@ class AppPath {
   AppPath._internal() {
     appDirPath = join(dirname(Platform.resolvedExecutable));
     supportDirectory().then((value) {
-      dataDir.complete(value);
+      dataDir.complete(compatibleAppDirectory(value, isLinux: system.isLinux));
     });
     temporaryDirectory().then((value) {
       tempDir.complete(value);
     });
     cacheDirectory().then((value) {
-      cacheDir.complete(value);
+      cacheDir.complete(compatibleAppDirectory(value, isLinux: system.isLinux));
     });
   }
 
@@ -58,7 +58,7 @@ class AppPath {
   }
 
   String get corePath {
-    return join(executableDirPath, 'FlClashCore$executableExtension');
+    return join(executableDirPath, '$appCoreExecutable$executableExtension');
   }
 
   String get helperPath {
@@ -156,6 +156,21 @@ class AppPath {
     final directory = await tempDir.future;
     return directory.path;
   }
+}
+
+Future<Directory> compatibleAppDirectory(
+  Directory directory, {
+  required bool isLinux,
+}) async {
+  if (!isLinux || ![appName, packageName].contains(basename(directory.path))) {
+    return directory;
+  }
+  final legacy = Directory(join(dirname(directory.path), legacyAppName));
+  if (!await legacy.exists()) return directory;
+  if (await directory.exists() && !await directory.list().isEmpty) {
+    return directory;
+  }
+  return legacy;
 }
 
 final appPath = AppPath();

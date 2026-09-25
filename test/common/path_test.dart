@@ -38,6 +38,70 @@ void main() {
     }
   });
 
+  group('Linux branding upgrades', () {
+    late Directory home;
+    late Directory legacy;
+    late Directory current;
+
+    setUp(() {
+      home = Directory.systemTemp.createTempSync('tunnio-path-upgrade-');
+      legacy = Directory(join(home.path, legacyAppName))..createSync();
+      File(
+        join(legacy.path, 'database.sqlite'),
+      ).writeAsStringSync('saved state');
+      current = Directory(join(home.path, packageName))..createSync();
+    });
+
+    tearDown(() => home.deleteSync(recursive: true));
+
+    test(
+      'an empty application-ID directory does not hide old profiles',
+      () async {
+        final selected = await compatibleAppDirectory(current, isLinux: true);
+
+        expect(selected.path, legacy.path);
+        expect(
+          File(join(selected.path, 'database.sqlite')).readAsStringSync(),
+          'saved state',
+        );
+      },
+    );
+
+    test('an existing application-ID store takes precedence', () async {
+      File(join(current.path, 'database.sqlite')).writeAsStringSync('current');
+
+      expect(
+        (await compatibleAppDirectory(current, isLinux: true)).path,
+        current.path,
+      );
+    });
+
+    test('the executable-name fallback also finds the old store', () async {
+      final renamed = Directory(join(home.path, appName));
+
+      expect(
+        (await compatibleAppDirectory(renamed, isLinux: true)).path,
+        legacy.path,
+      );
+    });
+
+    test('a fresh install keeps its normal application-ID directory', () async {
+      legacy.deleteSync(recursive: true);
+
+      expect(
+        (await compatibleAppDirectory(current, isLinux: true)).path,
+        current.path,
+      );
+    });
+
+    test('other platforms keep their path-provider result', () async {
+      expect(
+        (await compatibleAppDirectory(current, isLinux: false)).path,
+        current.path,
+      );
+    });
+  });
+
   test('provider directories match the paths handed to the core', () async {
     const proxiesUrl = 'https://example.com/a.yaml';
     const rulesUrl = 'https://example.com/b.yaml';

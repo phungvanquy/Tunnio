@@ -7,6 +7,7 @@ AppPublisherURL={{PUBLISHER_URL}}
 AppSupportURL={{PUBLISHER_URL}}
 AppUpdatesURL={{PUBLISHER_URL}}
 DefaultDirName={{INSTALL_DIR_NAME}}
+UsePreviousAppDir=yes
 DisableProgramGroupPage=yes
 OutputDir=.
 OutputBaseFilename={{OUTPUT_BASE_FILENAME}}
@@ -25,7 +26,8 @@ var
   i: Integer;
   ResultCode: Integer;
 begin
-  Processes := ['FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe'];
+  Processes := ['Tunnio.exe', 'TunnioCore.exe', 'TunnioHelperService.exe',
+    'FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe'];
 
   for i := 0 to GetArrayLength(Processes)-1 do
   begin
@@ -38,7 +40,9 @@ var
   HelperPath: String;
   ResultCode: Integer;
 begin
-  HelperPath := ExpandConstant('{app}\\FlClashHelperService.exe');
+  HelperPath := ExpandConstant('{app}\\TunnioHelperService.exe');
+  if not FileExists(HelperPath) then
+    HelperPath := ExpandConstant('{app}\\FlClashHelperService.exe');
   if FileExists(HelperPath) then
   begin
     Exec(HelperPath, 'uninstall', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
@@ -85,14 +89,59 @@ begin
   RemoveDir(AddBackslash(Base) + 'com.follow');
 end;
 
-function OwnsCommand(Command: String): Boolean;
-var
-  Executable: String;
+function CommandUsesExecutable(Command, Executable: String): Boolean;
 begin
-  Executable := ExpandConstant('{app}\FlClash.exe');
   Result := (CompareText(Command, Executable) = 0) or
     (CompareText(Command, '"' + Executable + '"') = 0) or
     (Pos(Lowercase('"' + Executable + '" '), Lowercase(Command)) = 1);
+end;
+
+function OwnsCommand(Command: String): Boolean;
+begin
+  Result := CommandUsesExecutable(Command, ExpandConstant('{app}\Tunnio.exe')) or
+    CommandUsesExecutable(Command, ExpandConstant('{app}\FlClash.exe'));
+end;
+
+procedure MigrateRegistrationValue(Root: Integer; Key, Name: String);
+var
+  Command, LegacyExecutable, Executable, Replacement: String;
+begin
+  if not RegQueryStringValue(Root, Key, Name, Command) then Exit;
+  LegacyExecutable := ExpandConstant('{app}\FlClash.exe');
+  if not CommandUsesExecutable(Command, LegacyExecutable) then Exit;
+  Executable := ExpandConstant('{app}\Tunnio.exe');
+  if Command[1] = '"' then
+    Replacement := '"' + Executable + '"' +
+      Copy(Command, Length(LegacyExecutable) + 3, Length(Command))
+  else
+    Replacement := Executable;
+  if not RegWriteStringValue(Root, Key, Name, Replacement) then
+    Log('Could not update registration: ' + Key);
+end;
+
+procedure MigrateUserRegistrations(Root: Integer; Prefix: String);
+var
+  Schemes: TArrayOfString;
+  I: Integer;
+begin
+  MigrateRegistrationValue(Root,
+    Prefix + 'Software\Microsoft\Windows\CurrentVersion\Run', 'FlClash');
+  Schemes := ['clash', 'clashmeta', 'flclash', 'tunnio'];
+  for I := 0 to GetArrayLength(Schemes) - 1 do
+    MigrateRegistrationValue(Root,
+      Prefix + 'Software\Classes\' + Schemes[I] + '\shell\open\command', '');
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  Users: TArrayOfString;
+  I: Integer;
+begin
+  if CurStep <> ssPostInstall then Exit;
+  MigrateUserRegistrations(HKCU, '');
+  if RegGetSubkeyNames(HKU, '', Users) then
+    for I := 0 to GetArrayLength(Users) - 1 do
+      MigrateUserRegistrations(HKU, Users[I] + '\');
 end;
 
 procedure RemoveUserRegistration(Root: Integer; Prefix: String);
@@ -101,7 +150,7 @@ var
   Key, Command: String;
   I: Integer;
 begin
-  Schemes := ['clash', 'clashmeta', 'flclash'];
+  Schemes := ['clash', 'clashmeta', 'flclash', 'tunnio'];
   for I := 0 to GetArrayLength(Schemes) - 1 do
   begin
     Key := Prefix + 'Software\Classes\' + Schemes[I];
@@ -195,6 +244,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{{SOURCE_DIR}}\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
+Type: files; Name: "{app}\\FlClash.exe"
+Type: files; Name: "{app}\\FlClashCore.exe"
+Type: files; Name: "{app}\\FlClashHelperService.exe"
 Type: files; Name: "{autoprograms}\\FlClash.lnk"
 Type: files; Name: "{autodesktop}\\FlClash.lnk"
 

@@ -36,15 +36,11 @@ img.Image brandIcon(
       img.fill(result, color: background);
     }
   }
-  final scaled = img.copyResize(
-    logo,
-    width: (size * fraction).round(),
-    interpolation: img.Interpolation.average,
-  );
+  final artwork = tint == null ? logo : img.Image.from(logo);
   if (tint != null) {
-    for (final pixel in scaled) {
+    for (final pixel in artwork) {
       final alpha =
-          pixel.a * ((1 - pixel.luminanceNormalized) * 1.6).clamp(0, 1);
+          pixel.a * ((pixel.luminanceNormalized - .25) / .5).clamp(0, 1);
       pixel
         ..r = tint.r
         ..g = tint.g
@@ -52,6 +48,11 @@ img.Image brandIcon(
         ..a = alpha;
     }
   }
+  final scaled = img.copyResize(
+    artwork,
+    width: (size * fraction).round(),
+    interpolation: img.Interpolation.average,
+  );
   return img.compositeImage(
     result,
     scaled,
@@ -81,7 +82,7 @@ Future<void> generateBrandIcons(img.Image logo, Directory root) async {
     );
   }
 
-  final background = img.ColorRgb8(241, 245, 249);
+  final background = img.ColorRgb8(7, 24, 42);
   await writeIco('windows/runner/resources/app_icon.ico', icoSizes, null);
   await writeIco('assets/images/icon.ico', icoSizes, null);
   for (final size in [16, 32, 64, 128, 256, 512, 1024]) {
@@ -122,11 +123,11 @@ Future<void> generateBrandIcons(img.Image logo, Directory root) async {
   }
   await writePng(
     '$_androidApp/drawable-nodpi/tunnio_launcher.png',
-    brandIcon(logo, 432, fraction: .54),
+    brandIcon(logo, 432, fraction: .52),
   );
   await writePng(
     '$_androidApp/drawable-nodpi/tunnio_monochrome.png',
-    brandIcon(logo, 432, fraction: .54, tint: img.ColorRgb8(255, 255, 255)),
+    brandIcon(logo, 432, fraction: .52, tint: img.ColorRgb8(255, 255, 255)),
   );
   await writePng(
     '$_androidService/drawable-nodpi/tunnio_notification.png',
@@ -142,7 +143,7 @@ Future<void> generateBrandIcons(img.Image logo, Directory root) async {
     font: img.arial24,
     x: 178,
     y: 80,
-    color: img.ColorRgb8(7, 24, 42),
+    color: img.ColorRgb8(241, 245, 249),
   );
   await writePng('$_androidApp/mipmap-xhdpi/ic_banner.png', banner);
 

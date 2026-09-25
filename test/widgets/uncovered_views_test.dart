@@ -168,7 +168,8 @@ void main() {
     await tester.pump();
 
     expect(find.byType(AboutView), findsOneWidget);
-    expect(find.text('Telegram'), findsOneWidget);
+    expect(find.text('Tunnio'), findsOneWidget);
+    expect(find.text('Telegram'), findsNothing);
     expect(tester.takeException(), null);
 
     final scrollables = find.byType(Scrollable);

@@ -165,10 +165,10 @@ jobs:
 
       - name: Test pinned Xray releases
         env:
-          FLCLASH_INTEROP_CORE: ${{ github.workspace }}/.dart_tool/FlClashCore
+          FLCLASH_INTEROP_CORE: ${{ github.workspace }}/.dart_tool/TunnioCore
         run: |
           mkdir -p .dart_tool
-          CGO_ENABLED=0 go build -C core -tags=with_gvisor -o ../.dart_tool/FlClashCore .
+          CGO_ENABLED=0 go build -C core -tags=with_gvisor -o ../.dart_tool/TunnioCore .
           python3 tool/xray_interop.py | tee xray-interop.log
 
       - name: Save interoperability results

@@ -1,6 +1,6 @@
 # rust_api
 
-Flutter Rust Bridge FFI package for FlClash. The Rust crate under `rust/` is compiled by the Dart build hook in
+Flutter Rust Bridge FFI package for Tunnio. The Rust crate under `rust/` is compiled by the Dart build hook in
 `hook/build.dart` through Native Assets, so there are no platform folders: Flutter runs the hook during every build
 and bundles the resulting `librust_api` itself.
 

@@ -88,4 +88,26 @@ void main() {
           'entry, or every debug run would register the running binary.',
     );
   });
+
+  test(
+    'an enabled registration is refreshed after the executable is renamed',
+    () async {
+      launcher.enabled = true;
+
+      await autoLaunch.updateStatus(true, isDebugMode: false);
+
+      expect(launcher.calls, ['enable']);
+    },
+  );
+
+  test(
+    'a disabled preference removes a registration with an obsolete path',
+    () async {
+      launcher.enabled = false;
+
+      await autoLaunch.updateStatus(false, isDebugMode: false);
+
+      expect(launcher.calls, ['disable']);
+    },
+  );
 }

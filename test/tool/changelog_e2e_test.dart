@@ -65,6 +65,35 @@ void main() {
     expect(versions.single.date, '2026-01-02');
   });
 
+  for (final hasOldBoundary in [false, true]) {
+    test(
+      'fresh history releases with an ${hasOldBoundary ? 'unreachable' : 'absent'} old boundary',
+      () {
+        if (hasOldBoundary) git(['tag', 'v0.8.96']);
+        git(['checkout', '--quiet', '--orphan', 'tunnio']);
+        commit('chore: initialize Tunnio');
+        commit('fix: use Tunnio download names');
+
+        final builder = ChangelogBuilder(Git(workingDirectory: repo.path));
+        final pending = builder.build(
+          pending: const PendingVersion(version: '0.8.99', date: '2026-09-25'),
+        );
+        expect(
+          pending.changelog.versions.single.groups.single.entries.single.text,
+          'Use Tunnio download names',
+        );
+
+        git(['tag', 'v0.8.99']);
+        final released = builder.build();
+        expect(released.changelog.versions.single.tag, 'v0.8.99');
+        expect(
+          released.changelog.versions.single.groups.single.entries.single.text,
+          'Use Tunnio download names',
+        );
+      },
+    );
+  }
+
   test('preserves frozen history before the first structured release', () {
     git(['checkout', '--quiet', '--orphan', 'frozen-history']);
     commit('chore: optimize commented policy');

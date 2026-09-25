@@ -1,5 +1,8 @@
 name: fl_clash
-description: A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.
+description: Tunnio is a multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.
+homepage: https://github.com/phungvanquy/Tunnio
+repository: https://github.com/phungvanquy/Tunnio
+issue_tracker: https://github.com/phungvanquy/Tunnio/issues
 publish_to: 'none'
 version: 0.8.99+2026092101
 environment:

@@ -11,7 +11,7 @@ void main() {
       url,
       '  $url\n',
       '\t$url\r\n',
-      for (final scheme in ['flclash', 'clash', 'clashmeta'])
+      for (final scheme in ['flclash', 'clash', 'clashmeta', 'tunnio'])
         '$scheme://install-config?url=${Uri.encodeComponent(url)}&name=Example',
     ]) {
       final result = VpnUrlIntake.parse(input);

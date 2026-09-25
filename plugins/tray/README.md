@@ -1,6 +1,6 @@
 # tray
 
-System tray integration for FlClash on Linux, macOS and Windows.
+System tray integration for Tunnio on Linux, macOS and Windows.
 
 ## API
 
@@ -11,7 +11,7 @@ Callers declare the desired tray state; they never sequence platform calls thems
 await Tray.instance.show(
   TraySpec(
     icon: TrayIcon.asset('assets/images/tray/unix/status_1.png', isTemplate: true),
-    toolTip: 'FlClash',
+    toolTip: 'Tunnio',
     menu: [
       TrayMenuAction(label: 'Show', onSelected: showWindow),
       const TrayMenuSeparator(),

@@ -17,7 +17,7 @@ String read(String path) => File(path).readAsStringSync();
 img.Image readPng(String path) => img.decodePng(File(path).readAsBytesSync())!;
 
 void main() {
-  test('display branding does not change storage and service identities', () {
+  test('branding preserves storage and upgrade identities', () {
     expect(appName, 'Tunnio');
     expect(legacyAppName, 'FlClash');
     expect(packageName, 'com.follow.clash');
@@ -27,7 +27,10 @@ void main() {
       DAVClient(const DAVProps(uri: 'https://example.test', user: '')).root,
       '/FlClash',
     );
-    expect(appHelperService, 'FlClashHelperService');
+    expect(
+      read('services/helper/src/service/windows.rs'),
+      contains('const SERVICE_NAME: &str = "FlClashHelperService";'),
+    );
     expect(
       PackageInfo(
         appName: 'Tunnio',
@@ -35,7 +38,7 @@ void main() {
         version: '1.0.0',
         buildNumber: '1',
       ).ua,
-      startsWith('FlClash/v1.0.0 clash-verge '),
+      startsWith('Tunnio/v1.0.0 FlClash/v1.0.0 clash-verge '),
     );
     expect(read('lib/common/launch.dart'), contains('appName: legacyAppName'));
     expect(
@@ -45,11 +48,79 @@ void main() {
     final installer = loadYaml(read('windows/packaging/exe/make_config.yaml'));
     expect(installer['display_name'], 'Tunnio');
     expect(installer['app_id'], '728B3532-C74B-4870-9068-BE70FE12A3E6');
-    expect(installer['executable_name'], 'FlClash.exe');
+    expect(installer['executable_name'], 'Tunnio.exe');
+    for (final format in ['deb', 'rpm']) {
+      expect(
+        loadYaml(
+          read('linux/packaging/$format/make_config.yaml'),
+        )['package_name'],
+        'FlClash',
+      );
+    }
     expect(
       read('macos/Runner/Configs/AppInfo.xcconfig'),
       contains('PRODUCT_BUNDLE_IDENTIFIER = com.follow.clash'),
     );
+  });
+
+  test('packaging and runtime agree on Tunnio executable names', () {
+    final build = loadYaml(read('build_config.yaml'));
+    expect(build['core_name'], appCoreExecutable);
+    expect(build['helper_name'], appHelperService);
+    expect(appCoreExecutable, 'TunnioCore');
+    expect(appHelperService, 'TunnioHelperService');
+    expect(loadYaml(read('distribute_options.yaml'))['app_name'], 'Tunnio');
+    for (final platform in ['windows', 'linux']) {
+      final cmake = read('$platform/CMakeLists.txt');
+      expect(cmake, contains('set(BINARY_NAME "Tunnio")'));
+      expect(cmake, contains(appCoreExecutable));
+      expect(cmake, contains(appHelperService));
+    }
+    final macos = read('macos/Runner.xcodeproj/project.pbxproj');
+    expect(macos, contains('/TunnioCore'));
+    expect(macos, isNot(contains('/fl_clash.app/')));
+    expect(
+      read('windows/runner/Runner.rc'),
+      contains('"OriginalFilename", "Tunnio.exe"'),
+    );
+  });
+
+  test('updates and release assets belong to the Tunnio repositories', () {
+    expect(repository, 'phungvanquy/Tunnio');
+    expect(coreRepository, 'phungvanquy/Tunnio-core');
+    final installer = loadYaml(read('windows/packaging/exe/make_config.yaml'));
+    expect(installer['publisher_name'], 'phungvanquy');
+    expect(installer['publisher_url'], 'https://github.com/$repository');
+    for (final template in [
+      'release_template.md',
+      'homebrew_cask_template.rb',
+    ]) {
+      final contents = read('.github/$template');
+      expect(contents, contains('github.com/$repository/releases/download/'));
+      expect(contents, contains('/Tunnio-'));
+      expect(contents, isNot(contains('chen08209/FlClash')));
+    }
+  });
+
+  test('every platform registers Tunnio links and legacy import schemes', () {
+    expect(
+      protocolSchemes,
+      containsAll(['clash', 'clashmeta', 'flclash', 'tunnio']),
+    );
+    final android = read('android/app/src/main/AndroidManifest.xml');
+    final macos = read('macos/Runner/Info.plist');
+    for (final scheme in protocolSchemes) {
+      expect(android, contains('android:scheme="$scheme"'));
+      expect(macos, contains('<string>$scheme</string>'));
+      for (final format in ['deb', 'rpm', 'appimage']) {
+        expect(
+          loadYaml(
+            read('linux/packaging/$format/make_config.yaml'),
+          )['supported_mime_type'],
+          contains('x-scheme-handler/$scheme'),
+        );
+      }
+    }
   });
 
   test('platform launcher and window labels use Tunnio', () {
@@ -87,7 +158,8 @@ void main() {
     'canonical logo is transparent and generated Android layers stay inside safe area',
     () {
       final source = readPng('assets/images/icon.png');
-      expect([source.width, source.height], [1024, 1024]);
+      expect(source.width, source.height);
+      expect(source.width, greaterThanOrEqualTo(1024));
       expect(source.getPixel(0, 0).a, 0);
       final foreground = readPng(
         'android/app/src/main/res/drawable-nodpi/tunnio_launcher.png',
@@ -118,17 +190,19 @@ void main() {
   );
 
   test(
-    'monochrome rendering retains line details rather than a solid silhouette',
+    'monochrome rendering retains light artwork and removes the dark background',
     () {
       final source = img.Image(width: 2, height: 2, numChannels: 4);
       source.setPixelRgba(0, 0, 0, 0, 0, 255);
       source.setPixelRgba(1, 0, 255, 255, 255, 255);
+      source.setPixelRgba(0, 1, 7, 24, 42, 255);
       final icon = brandIcon(source, 2, tint: img.ColorRgb8(0, 200, 83));
-      expect(icon.getPixel(0, 0).a, 255);
-      expect(icon.getPixel(0, 0).g, 200);
-      expect(icon.getPixel(1, 0).a, 0);
+      expect(icon.getPixel(0, 0).a, 0);
+      expect(icon.getPixel(1, 0).a, 255);
+      expect(icon.getPixel(1, 0).g, 200);
+      expect(icon.getPixel(0, 1).a, 0);
       expect(icon.getPixel(1, 1).a, 0);
-      expect(source.getPixel(0, 0).g, 0);
+      expect(source.getPixel(1, 0).g, 255);
     },
   );
 

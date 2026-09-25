@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -37,15 +36,17 @@ class AutoLaunch {
     return launcher.disable();
   }
 
-  Future<void> updateStatus(bool isAutoLaunch) async {
-    if (kDebugMode) {
+  Future<void> updateStatus(
+    bool isAutoLaunch, {
+    bool isDebugMode = kDebugMode,
+  }) async {
+    if (isDebugMode) {
       return;
     }
-    if (await isEnable == isAutoLaunch) return;
     if (isAutoLaunch == true) {
-      unawaited(enable());
+      await enable();
     } else {
-      unawaited(disable());
+      await disable();
     }
   }
 }

@@ -2,7 +2,7 @@
 
 Tunnio is this fork's user-facing brand for the FlClash multi-platform proxy client based on ClashMeta (mihomo), built with Flutter. It supports Android, Windows, macOS, and Linux, using a Material You design with Surfboard-like UI.
 
-Branding is independent of compatibility identity: keep `com.follow.clash`, the Dart package, Windows product/storage metadata, Linux package/binary names, Core/Helper names, IPC namespaces, URI schemes, notification channel IDs, and installer AppId stable. `legacyAppName` also preserves the WebDAV `/FlClash` folder, desktop auto-start registration, and default TUN device. Platform display labels and `appName` use Tunnio. Native icon generation is documented in `commands.md`.
+Tunnio owns the app, installer, download, and desktop executable branding: `Tunnio`, `TunnioCore`, and `TunnioHelperService`. Update checks and support links use `phungvanquy/Tunnio`; the Core submodule uses `phungvanquy/Tunnio-core`. Preserve upgrade identities: `com.follow.clash`, the Dart package, Windows company/product storage metadata and installer AppId, Linux package IDs, Helper service registration IDs, IPC namespaces, and notification channel IDs. `legacyAppName` preserves WebDAV `/FlClash`, desktop auto-start registration, legacy Linux data folders, and the default TUN device. Keep existing URI schemes alongside `tunnio`. Native icon generation is documented in `commands.md`.
 
 ## Version Notes
 
@@ -17,10 +17,8 @@ Branding is independent of compatibility identity: keep `com.follow.clash`, the 
 
 Three `pubspec.yaml` dependencies are pinned to a fork — `window_manager` by tag,
 the other two by commit SHA. All three
-forks live under `chen08209`, the same account that owns this repository, so they
-are maintained in-house rather than tracked from a third party: advancing a pin
-is a local decision, and there is no external maintainer to wait on for the patch
-itself. What each fork still waits on is the *upstream* fix that would let the
+forks live under `chen08209`, the upstream FlClash maintainer. Keep these third-party URLs and refs intact;
+renaming this app does not create replacement dependency forks. What each fork still waits on is the *upstream* fix that would let the
 pin be dropped entirely, recorded below.
 
 Each entry records what the fork changes and what has to be true before it can go

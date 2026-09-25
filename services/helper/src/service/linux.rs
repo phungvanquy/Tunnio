@@ -152,7 +152,7 @@ fn quoted_unit_argument(path: &Path) -> String {
 fn unit_contents(executable: &Path, owner: Owner) -> String {
     format!(
         "[Unit]\n\
-         Description=FlClash Helper starts the FlClash Core with the privileges TUN mode needs.\n\
+         Description=Tunnio Helper starts the Tunnio Core with the privileges TUN mode needs.\n\
          After=network-online.target nftables.service iptables.service\n\
          StartLimitIntervalSec=60\n\
          StartLimitBurst=5\n\
@@ -211,7 +211,7 @@ fn ensure_unit_is_free_for(owner: Owner) -> Result<()> {
     match installed_owner_uid(&existing) {
         Some(uid) if uid != owner.uid => bail!(
             "the Helper is already installed for UID {uid}; \
-             run `FlClashHelperService uninstall` as that user first"
+             run `TunnioHelperService uninstall` as that user first"
         ),
         _ => Ok(()),
     }
@@ -382,14 +382,14 @@ mod tests {
     #[test]
     fn unit_names_the_owner_and_the_helper_it_starts() {
         let unit = unit_contents(
-            Path::new("/opt/FlClash/FlClashHelperService"),
+            Path::new("/opt/Tunnio/TunnioHelperService"),
             Owner {
                 uid: 1000,
                 gid: 1001,
             },
         );
 
-        assert!(unit.contains("ExecStart=\"/opt/FlClash/FlClashHelperService\"\n"));
+        assert!(unit.contains("ExecStart=\"/opt/Tunnio/TunnioHelperService\"\n"));
         assert!(unit.contains("Group=1001\n"));
         assert!(unit.contains("Environment=FLCLASH_HELPER_OWNER_UID=1000\n"));
         assert!(unit.contains("Environment=FLCLASH_HELPER_OWNER_GID=1001\n"));
@@ -409,7 +409,7 @@ mod tests {
     #[test]
     fn reads_the_owner_back_out_of_an_installed_unit() {
         let unit = unit_contents(
-            Path::new("/opt/FlClash/FlClashHelperService"),
+            Path::new("/opt/Tunnio/TunnioHelperService"),
             Owner {
                 uid: 1000,
                 gid: 1001,

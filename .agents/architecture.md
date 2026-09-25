@@ -576,11 +576,11 @@ Platform projects copy the artifacts out of `libclash/`; application code must n
 
 - Android: the Go core is built `c-shared`, and `libclash.so` with its headers lands in the `:core` module (see Android
   Native Task Ordering).
-- macOS: a standalone `FlClashCore`. `Release.xcconfig` pins release and profile `ARCHS` to the host because
+- macOS: a standalone `TunnioCore`. `Release.xcconfig` pins release and profile `ARCHS` to the host because
   flutter_tools otherwise builds a universal binary and every artifact ships one slice; the hook skips a non-host slice
   for the same reason. The `Stage Core` phase copies the Core after the hook may have rewritten it and fails when it is
   missing or lacks a slice for `ARCHS`, so a skipped hook cannot stage a stale Core silently.
-- Linux and Windows: `FlClashCore`, the Rust `FlClashHelperService`, and a `manifest.json` holding `coreSha256`; the
+- Linux and Windows: `TunnioCore`, the Rust `TunnioHelperService`, and a `manifest.json` holding `coreSha256`; the
   Core builds first because the Helper embeds its hash. The CMake `install` rules copy them, and the Windows bundle
   places `manifest.json` beside the executable. A Helper running from a Debug build keeps its exe open and the install
   fails behind an opaque `MSB3073`, so `windows/CMakeLists.txt` stops it from an `install(CODE)` step for the `Debug`
@@ -609,7 +609,7 @@ Windows helper integrity/version check:
 - Flutter reads the Core SHA256 from the bundled `manifest.json` and sends it with `/ping`. Debug, Profile, and Release
   builds use the same Helper protocol and may use TUN through the same flow.
 - `/ping` is loopback-only and requires no request token. The Helper compares the requested SHA256 with its embedded value
-  and checks that the fixed `FlClashCore.exe` beside it exists; `/start` performs the actual Core SHA256 verification before
+  and checks that the fixed `TunnioCore.exe` beside it exists; `/start` performs the actual Core SHA256 verification before
   every launch. The response includes the running Helper path and protocol header; Dart checks both against the current
   installation. The launcher selects the Helper only when `/ping` reports ready; any other readiness (missing manifest,
   unavailable Helper, or a Helper built for a different Core) falls back to the direct Core without requesting elevation.
@@ -643,7 +643,7 @@ Windows helper integrity/version check:
 Build configuration defaults live in `plugins/setup/setup_hooks/lib/src/options.dart` and can be overridden via the root
 `build_config.yaml`.
 
-Architecture detection is automatic. The `--description` flag passed to `flutter_distributor` adds arch suffixes to artifact names, such as `FlClash-0.8.93-macos-arm64.dmg`.
+Architecture detection is automatic. The `--description` flag passed to `flutter_distributor` adds arch suffixes to artifact names, such as `Tunnio-0.8.99-macos-arm64.dmg`.
 
 #### Android Native Task Ordering
 
@@ -736,9 +736,9 @@ after calculating the SHA256 of the Core produced for the active Flutter configu
 
 The helper owns its Windows Service Control Manager lifecycle through two elevated commands:
 
-- `FlClashHelperService.exe install` stops and removes any stale registration, creates the auto-start service for the
+- `TunnioHelperService.exe install` stops and removes any stale registration, creates the auto-start service for the
   current executable path, starts it, and waits for the running state.
-- `FlClashHelperService.exe uninstall` stops the service, waits for shutdown, removes its registration, and is also used
+- `TunnioHelperService.exe uninstall` stops the service, waits for shutdown, removes its registration, and is also used
   by the Windows package uninstaller.
 - Windows uninstall removes `com.follow\clash` beneath roaming and local AppData for local profiles, plus this install's
   startup and protocol registrations in loaded user hives. Unloaded user hives are not mounted; exported files are outside
@@ -751,7 +751,7 @@ The Dart layer only launches the helper's `install` command through `ShellExecut
 Linux takes the same shape with systemd in place of the Service Control Manager, and the same install timing: nothing
 is registered at package install, and `Linux.registerService` asks for elevation only when TUN authorization needs it.
 
-- `FlClashHelperService install`, run through `pkexec` so polkit raises the system prompt, writes
+- `TunnioHelperService install`, run through `pkexec` so polkit raises the system prompt, writes
   `/etc/systemd/system/flclash-helper.service` for the current executable path and enables and restarts it. It reads
   `PKEXEC_UID`/`SUDO_UID` to learn who asked, and refuses to install without one — there would be no account to grant
   the socket to. It also refuses a Helper whose binary or directory is not root-owned and non-writable (a unit runs it
@@ -759,11 +759,11 @@ is registered at package install, and `Linux.registerService` asks for elevation
   installed for a different UID rather than restart the service out from under that account.
 - That ownership check is why the `flutter_distributor` fork normalizes the packaging tree to 0755/0644 before
   `dpkg-deb`, `rpmbuild` and `appimagetool` run: they record modes verbatim, and Ubuntu's per-user default umask
-  of 002 would otherwise ship `/opt/FlClash` as 0775, which the installer rejects as group-writable.
+  of 002 would otherwise ship `/opt/Tunnio` as 0775, which the installer rejects as group-writable.
 - The rpm spec sets `debug_package` and `__os_install_post` to nil for the same reason: rpmbuild's find-debuginfo and
-  brp-strip rewrite `FlClashCore`, and a Core whose SHA256 no longer matches the Helper's embedded value is refused at
+  brp-strip rewrite `TunnioCore`, and a Core whose SHA256 no longer matches the Helper's embedded value is refused at
   `/start`, which silently degrades every launch to the direct Core.
-- `FlClashHelperService uninstall` disables the unit, removes it and reloads systemd.
+- `TunnioHelperService uninstall` disables the unit, removes it and reloads systemd.
 - The unit carries `Group=` (the owner's primary GID), `RuntimeDirectory=flclash`, the owner's UID/GID in
   `FLCLASH_HELPER_OWNER_UID`/`_GID`, a double-quoted `ExecStart=` with `%` escaped, and `Restart=on-failure` under a
   start limit so a broken unit ends up failed instead of restarting forever. The helper serves

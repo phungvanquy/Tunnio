@@ -164,7 +164,7 @@ class _VpnConfigurationSectionState
   Future<void> _exportArchive(String path) async {
     final store = await ref.read(profileGenerationStoreProvider.future);
     await VpnArchiveStore(store.home).verify(File(path));
-    await picker.saveFileCopy('flclash-migration-backup.zip', path);
+    await picker.saveFileCopy('tunnio-migration-backup.zip', path);
   }
 
   @override

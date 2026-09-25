@@ -1,6 +1,6 @@
 # Tunnio VPN setup and recovery
 
-Tunnio is the new display name of this FlClash-based app. The rabbit-and-carrot rocket artwork is used for its launcher, desktop, notification, and tray icons. Existing app IDs, desktop executable names, saved settings, auto-start identity, URI schemes, and the WebDAV `/FlClash` backup folder remain unchanged. Windows executables and download filenames can still contain `FlClash`; the app and shortcuts display Tunnio. Upgrade with the same signing identity to retain application data.
+Tunnio uses the rabbit-and-carrot rocket artwork for its launcher, desktop, notification, and tray icons. Installers, downloads, and desktop executables use Tunnio names. Existing app IDs, saved settings, Linux package IDs, Windows installer identity, auto-start registration, legacy URI schemes, and the WebDAV `/FlClash` backup folder are retained for upgrades. The `tunnio://install-config` scheme is supported alongside the existing schemes. Upgrade with the same signing identity to retain application data.
 
 ## Import, select, connect
 

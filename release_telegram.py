@@ -9,9 +9,12 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TAG = os.getenv("TAG")
 RUN_ID = os.getenv("RUN_ID")
 
-IS_STABLE = "-" not in TAG
+IS_STABLE = bool(TAG) and "-" not in TAG
 
-CHAT_ID = "@FlClash"
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+REPOSITORY = os.getenv("GITHUB_REPOSITORY", "phungvanquy/Tunnio")
+if not TELEGRAM_BOT_TOKEN or not CHAT_ID:
+    sys.exit("Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to publish a Tunnio announcement.")
 API_URL = f"http://localhost:8081/bot{TELEGRAM_BOT_TOKEN}/sendMediaGroup"
 
 DIST_DIR = os.path.join(os.getcwd(), "dist")
@@ -51,9 +54,9 @@ if TAG:
     text += f"\n<b>{html.escape(TAG)}</b>\n"
 
 if IS_STABLE:
-    text += f"\nhttps://github.com/chen08209/FlClash/releases/tag/{TAG}\n"
+    text += f"\nhttps://github.com/{REPOSITORY}/releases/tag/{TAG}\n"
 else:
-    text += f"\nhttps://github.com/chen08209/FlClash/actions/runs/{RUN_ID}\n"
+    text += f"\nhttps://github.com/{REPOSITORY}/actions/runs/{RUN_ID}\n"
 
 if os.path.exists(release):
     text += "\n"

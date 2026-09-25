@@ -4,19 +4,16 @@
 
 </div>
 
-## FlClash
+## Tunnio
 
-[![Downloads](https://img.shields.io/github/downloads/chen08209/FlClash/total?style=flat-square&logo=github)](https://github.com/chen08209/FlClash/releases/)[![Last Version](https://img.shields.io/github/release/chen08209/FlClash/all.svg?style=flat-square)](https://github.com/chen08209/FlClash/releases/)[![License](https://img.shields.io/github/license/chen08209/FlClash?style=flat-square)](LICENSE)
+Tunnio 基于 [FlClash](https://github.com/chen08209/FlClash)，使用 ITMOTunnio 标志。Core 位于 [Tunnio-core](https://github.com/phungvanquy/Tunnio-core)。
 
-[![Channel](https://img.shields.io/badge/Telegram-Channel-blue?style=flat-square&logo=telegram)](https://t.me/FlClash)
+[![Downloads](https://img.shields.io/github/downloads/phungvanquy/Tunnio/total?style=flat-square&logo=github)](https://github.com/phungvanquy/Tunnio/releases/)[![Last Version](https://img.shields.io/github/release/phungvanquy/Tunnio/all.svg?style=flat-square)](https://github.com/phungvanquy/Tunnio/releases/)[![License](https://img.shields.io/github/license/phungvanquy/Tunnio?style=flat-square)](LICENSE)
 
 基于ClashMeta的多平台代理客户端，简单易用，开源无广告。
 
 <p align="center">
-    <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="snapshots/preview-dark.png">
-        <img alt="FlClash on desktop and mobile" src="snapshots/preview.png" width="90%">
-    </picture>
+    <img alt="Tunnio" src="assets/images/icon.png" width="128">
 </p>
 
 ## Features
@@ -41,7 +38,7 @@
 
 应用仅保留一个配置。导入成功后替换当前配置；导入失败时保留原配置。齿轮按钮打开设置，其中包含自定义路由、配置编辑、备份和恢复。Flutter 关闭后暂停订阅和提供商列表刷新，已运行的原生 VPN 配置和健康检查继续工作。
 
-连接状态、迁移及恢复说明见 [VPN 使用指南（英文）](VPN_GUIDE.md)。上方预览图可能仍显示旧版界面。
+连接状态、迁移及恢复说明见 [VPN 使用指南（英文）](VPN_GUIDE.md)。
 
 ### Linux
 
@@ -65,14 +62,9 @@
 
 ## Download
 
-<a href="https://chen08209.github.io/FlClash-fdroid-repo/repo?fingerprint=789D6D32668712EF7672F9E58DEEB15FBD6DCEEC5AE7A4371EA72F2AAE8A12FD"><img alt="Get it on F-Droid" src="snapshots/get-it-on-fdroid.svg" width="200px"/></a> <a href="https://github.com/chen08209/FlClash/releases"><img alt="Get it on GitHub" src="snapshots/get-it-on-github.svg" width="200px"/></a>
+从 [Tunnio Releases](https://github.com/phungvanquy/Tunnio/releases) 下载正式安装包，或从 [GitHub Actions](https://github.com/phungvanquy/Tunnio/actions) 下载测试版本。
 
-### Homebrew
-
-```bash
-brew tap chen08209/tap
-brew install --cask flclash
-```
+安装包文件名以 `Tunnio-` 开头。应用保留现有应用 ID 和数据目录；Android 升级还需要使用相同的签名。
 
 ## Build
 
@@ -139,7 +131,7 @@ brew install --cask flclash
 支持开发者的最简单方式是点击页面顶部的星标（⭐）。
 
 <p style="text-align: center;">
-    <a href="https://api.star-history.com/svg?repos=chen08209/FlClash&Date">
-        <img alt="start" width=50% src="https://api.star-history.com/svg?repos=chen08209/FlClash&Date"/>
+    <a href="https://api.star-history.com/svg?repos=phungvanquy/Tunnio&Date">
+        <img alt="start" width=50% src="https://api.star-history.com/svg?repos=phungvanquy/Tunnio&Date"/>
     </a>
 </p>

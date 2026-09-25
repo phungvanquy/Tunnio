@@ -834,7 +834,7 @@ mod tests {
 
     #[tokio::test]
     async fn ping_returns_running_helper_path_for_verified_core() {
-        let response = ping_response(Ok(PathBuf::from("FlClashHelperService.exe")));
+        let response = ping_response(Ok(PathBuf::from("TunnioHelperService.exe")));
 
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
@@ -845,7 +845,7 @@ mod tests {
             warp::hyper::body::to_bytes(response.into_body())
                 .await
                 .unwrap(),
-            "FlClashHelperService.exe"
+            "TunnioHelperService.exe"
         );
     }
 
