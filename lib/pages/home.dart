@@ -1,5 +1,4 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/common/server_country.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -718,13 +717,12 @@ class _VpnServerListState extends ConsumerState<VpnServerList> {
                         child: Material(
                           color: Colors.transparent,
                           shape: AppShape.xl,
-                          clipBehavior: Clip.antiAlias,
                           child: ListTile(
                             key: ValueKey(selection),
                             shape: AppShape.xl,
                             dense: true,
-                            minTileHeight: 60,
-                            minVerticalPadding: 6,
+                            minTileHeight: 64,
+                            minVerticalPadding: 8,
                             minLeadingWidth: 20,
                             horizontalTitleGap: 12,
                             contentPadding: const EdgeInsets.symmetric(
@@ -734,12 +732,8 @@ class _VpnServerListState extends ConsumerState<VpnServerList> {
                             selectedTileColor:
                                 context.colorScheme.secondaryContainer,
                             title: Text(
-                              server == null ? title : serverDisplayName(title),
-                              semanticsLabel: title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: context.textTheme.titleMedium?.copyWith(
-                                fontSize: 18,
+                              title,
+                              style: context.textTheme.titleSmall?.copyWith(
                                 fontFamilyFallback: [FontFamily.twEmoji.value],
                                 fontWeight: selected
                                     ? FontWeight.bold
@@ -750,13 +744,12 @@ class _VpnServerListState extends ConsumerState<VpnServerList> {
                               padding: const EdgeInsets.only(top: 4),
                               child: _ServerDetails(
                                 subtitle: subtitle,
-                                wrapSubtitle: server == null,
                                 stacked: stacked,
                                 measurement: measurement,
                               ),
                             ),
                             leading: server != null
-                                ? _ServerLocation(name: server.name)
+                                ? null
                                 : Icon(
                                     selected
                                         ? Icons.check_circle
@@ -794,13 +787,11 @@ class _VpnServerListState extends ConsumerState<VpnServerList> {
 class _ServerDetails extends StatelessWidget {
   const _ServerDetails({
     required this.subtitle,
-    required this.wrapSubtitle,
     required this.stacked,
     required this.measurement,
   });
 
   final String subtitle;
-  final bool wrapSubtitle;
   final bool stacked;
   final Widget? measurement;
 
@@ -808,9 +799,7 @@ class _ServerDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final description = Text(
       subtitle,
-      maxLines: wrapSubtitle ? null : 1,
-      overflow: wrapSubtitle ? null : TextOverflow.ellipsis,
-      style: context.textTheme.bodyMedium?.copyWith(
+      style: context.textTheme.bodySmall?.copyWith(
         color: context.colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.normal,
       ),
@@ -833,38 +822,6 @@ class _ServerDetails extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ServerLocation extends StatelessWidget {
-  const _ServerLocation({required this.name});
-
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    final flag = serverCountryFlag(name);
-    return ExcludeSemantics(
-      child: SizedBox.square(
-        dimension: 24,
-        child: Center(
-          child: flag == null
-              ? Icon(
-                  Icons.dns_outlined,
-                  size: 20,
-                  color: context.colorScheme.onSurfaceVariant,
-                )
-              : Text(
-                  flag,
-                  textScaler: TextScaler.noScaling,
-                  style: TextStyle(
-                    fontFamily: FontFamily.twEmoji.value,
-                    fontSize: 22,
-                  ),
-                ),
-        ),
-      ),
     );
   }
 }

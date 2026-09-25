@@ -760,7 +760,7 @@ void main() {
   }
 
   homeTest(
-    'country flags remain visible after selection with a neutral fallback',
+    'server names retain their own icons without added country decorations',
     (tester) async {
       final profile = configured();
       setProfile(
@@ -773,20 +773,98 @@ void main() {
         ),
       );
       await pump(tester);
-      expect(find.text('🇯🇵'), findsOneWidget);
-      expect(find.text('🇩🇪'), findsOneWidget);
-      expect(find.byIcon(Icons.dns_outlined), findsOneWidget);
+      expect(find.text('🇯🇵 Tokyo'), findsOneWidget);
+      expect(find.text('🇯🇵'), findsNothing);
+      expect(find.text('🇩🇪'), findsNothing);
+      expect(find.byIcon(Icons.dns_outlined), findsNothing);
       await tester.tap(find.text('DE Frankfurt'));
       await tester.pump();
       expect(proxies.selections, [const VpnSelection.server('server-1')]);
-      expect(find.text('🇩🇪'), findsOneWidget);
+      expect(find.text('DE Frankfurt'), findsOneWidget);
       final row = tester.widget<ListTile>(
         find.byKey(const ValueKey(VpnSelection.server('server-1'))),
       );
       expect(row.selected, isTrue);
+      expect(row.leading, isNull);
       expect(setup.requests, isEmpty);
     },
   );
+
+  for (final scale in [.8, 1.4, 2.5]) {
+    homeTest('all long server and provider text remains visible at scale=$scale', (
+      tester,
+    ) async {
+      const name =
+          '[9] > 🇫🇮 Example region · Premium connection with a very long descriptive server name and a final identifying suffix';
+      const provider =
+          'Example subscription provider with a long descriptive label and a final identifying suffix';
+      final base = configured();
+      setProfile(
+        base.copyWith.snapshot(
+          servers: [
+            base.snapshot.servers.first.copyWith(
+              name: name,
+              type: 'Hysteria2',
+              provider: provider,
+            ),
+          ],
+        ),
+      );
+      await pump(
+        tester,
+        size: const Size(320, 740),
+        scale: scale,
+        android: scale <= 1.4,
+        dark: true,
+      );
+      latency.publish(
+        const VpnLatencyState(
+          results: {'server-0': VpnNodeLatency(VpnLatencyStatus.measured, 250)},
+        ),
+      );
+      await tester.pumpAndSettle();
+      final row = find.byKey(const ValueKey(VpnSelection.server('server-0')));
+      await tester.scrollUntilVisible(
+        row,
+        160,
+        scrollable: find.descendant(
+          of: find.byKey(const PageStorageKey('vpn-servers')),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final label in [name, 'Hysteria2 · $provider']) {
+        final text = find.text(label);
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.descendant(of: text, matching: find.byType(RichText)),
+        );
+        expect(paragraph.didExceedMaxLines, isFalse);
+        expect(
+          tester
+              .getRect(row)
+              .inflate(.5)
+              .contains(tester.getRect(text).topLeft),
+          isTrue,
+        );
+        expect(
+          tester
+              .getRect(row)
+              .inflate(.5)
+              .contains(tester.getRect(text).bottomRight),
+          isTrue,
+        );
+      }
+      expect(
+        tester.getRect(find.text(name)).bottom,
+        lessThanOrEqualTo(
+          tester.getRect(find.text('Hysteria2 · $provider')).top,
+        ),
+      );
+      expect(tester.widget<ListTile>(row).leading, isNull);
+      expect(proxies.selections, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final edge in ['top', 'bottom']) {
     homeTest('selected Android row is clipped at the $edge of the list', (
@@ -893,15 +971,19 @@ void main() {
         final title = find.text('DE Frankfurt Premium Reality Server 01');
         final protocol = find.text('Vless');
         final measurement = find.text('156 ms');
-        final scaler = MediaQuery.textScalerOf(tester.element(title));
-        expect(
-          scaler.scale(tester.widget<Text>(title).style!.fontSize!),
-          greaterThanOrEqualTo(14),
-        );
-        expect(
-          scaler.scale(tester.widget<Text>(protocol).style!.fontSize!),
-          greaterThanOrEqualTo(11),
-        );
+        for (final value in [title, protocol]) {
+          final paragraph = tester.renderObject<RenderParagraph>(
+            find.descendant(of: value, matching: find.byType(RichText)),
+          );
+          expect(paragraph.didExceedMaxLines, isFalse);
+          expect(
+            tester
+                .getRect(row)
+                .inflate(.5)
+                .contains(tester.getRect(value).bottomRight),
+            isTrue,
+          );
+        }
         expect(
           tester.getSize(title).width,
           greaterThanOrEqualTo(tester.getSize(row).width - 90),
