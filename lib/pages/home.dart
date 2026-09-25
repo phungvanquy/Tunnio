@@ -565,7 +565,6 @@ class _ActiveNode extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.titleSmall?.copyWith(
-                        fontFamilyFallback: [FontFamily.twEmoji.value],
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -734,7 +733,6 @@ class _VpnServerListState extends ConsumerState<VpnServerList> {
                             title: Text(
                               title,
                               style: context.textTheme.titleSmall?.copyWith(
-                                fontFamilyFallback: [FontFamily.twEmoji.value],
                                 fontWeight: selected
                                     ? FontWeight.bold
                                     : FontWeight.w500,

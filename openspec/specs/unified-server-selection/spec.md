@@ -65,6 +65,8 @@ After a successful import the application SHALL show one list containing `Auto`,
 
 Individual server rows SHALL display the original node name verbatim, including any icons or flags supplied by the subscription. The application SHALL NOT infer countries, add a separate flag or location icon, or strip characters from the name. Auto and Fallback SHALL retain their mode icons. Selection SHALL retain its accessible selected state and selected surface independently of latency color.
 
+Server names and the current-node label SHALL use the platform's normal text-font fallback. An emoji font SHALL NOT be applied as a fallback for the entire name: digits and keycap-base punctuation must retain visible text glyphs.
+
 Node names SHALL use the compact title-small typography and protocol/provider labels the secondary body-small typography used before the header refresh. Names and protocol/provider text SHALL wrap without line limits or ellipsis; the row SHALL grow to contain the entire text at the configured text scale. Latency SHALL remain beside or below the metadata without narrowing the name. Rows SHALL retain at least 64 logical pixels of height, eight logical pixels of vertical content padding, and one logical pixel of inter-row spacing. Each row SHALL own its Material ink surface so selected backgrounds and tap feedback remain clipped by the scrolling viewport.
 
 #### Scenario: Subscription includes its own icons
@@ -72,6 +74,12 @@ Node names SHALL use the compact title-small typography and protocol/provider la
 - **WHEN** a node name includes a prefix and an embedded flag, such as `[9] > 🇫🇮 Example region`
 - **THEN** the complete name and supplied flag appear exactly once, without a generated country icon or name rewriting
 - **AND** selecting the row still uses its original catalog identity
+
+#### Scenario: Numeric node identifiers on Android
+
+- **WHEN** Android displays `[1] > Gemini` or `[1] > 🇩🇪 Germany 2`
+- **THEN** the `1` and `2` have visible glyphs in ordinary and selected rows and in the connected current-node label
+- **AND** all digits from `0` through `9`, plus literal `#` and `*`, remain visible rather than becoming blank emoji components
 
 #### Scenario: Long names and provider labels on Android
 

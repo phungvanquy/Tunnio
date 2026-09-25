@@ -153,7 +153,15 @@ void main() {
   late _Latency latency;
   late _ActiveNode activeNode;
 
-  setUpAll(() async => AppLocalizations.load(const Locale('en')));
+  setUpAll(() async {
+    await AppLocalizations.load(const Locale('en'));
+    final emojiFont = FontLoader(FontFamily.twEmoji.value)
+      ..addFont(rootBundle.load('assets/fonts/Twemoji.Mozilla.ttf'));
+    await emojiFont.load();
+    final sparseFont = FontLoader('SparseTestFont')
+      ..addFont(rootBundle.load('assets/fonts/Icons.ttf'));
+    await sparseFont.load();
+  });
 
   setUp(() {
     setup = _Setup();
@@ -192,6 +200,7 @@ void main() {
     bool dark = false,
     bool reducedMotion = false,
     bool android = false,
+    String? fontFamily,
   }) async {
     final pixelRatio = android ? 3.0 : 1.0;
     tester.view.devicePixelRatio = pixelRatio;
@@ -208,6 +217,7 @@ void main() {
     final screen = android
         ? Theme(
             data: ThemeData(
+              fontFamily: fontFamily,
               platform: TargetPlatform.android,
               useMaterial3: true,
               colorScheme: container.read(
@@ -789,6 +799,81 @@ void main() {
       expect(setup.requests, isEmpty);
     },
   );
+
+  for (final connected in [false, true]) {
+    homeTest('Android node digits have visible width connected=$connected', (
+      tester,
+    ) async {
+      const names = ['[1] > Gemini', '[1] > 🇩🇪 Germany 2', '[0123456789] #*'];
+      final base = configured();
+      final profile = base.copyWith.snapshot(
+        selection: const VpnSelection.server('server-1'),
+        servers: [
+          for (var i = 0; i < names.length; i++)
+            base.snapshot.servers[i].copyWith(name: names[i]),
+        ],
+      );
+      setProfile(profile);
+      container
+          .read(coreRunStateProvider.notifier)
+          .observe(
+            CoreRunObservation(
+              session: 'digits',
+              revision: 1,
+              active: connected,
+              tun: connected,
+            ),
+          );
+      // A sparse primary font exercises fallback instead of the test runner's Ahem substitution.
+      await pump(
+        tester,
+        size: const Size(360, 800),
+        android: true,
+        fontFamily: 'SparseTestFont',
+      );
+      final list = find.byKey(const PageStorageKey('vpn-servers'));
+      final scrollable = find.descendant(
+        of: list,
+        matching: find.byType(Scrollable),
+      );
+
+      void expectVisibleDigits(Finder parent, String name) {
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.descendant(
+            of: find.descendant(of: parent, matching: find.text(name)),
+            matching: find.byType(RichText),
+          ),
+        );
+        for (final match in RegExp(r'[0-9#*]').allMatches(name)) {
+          final boxes = paragraph.getBoxesForSelection(
+            TextSelection(baseOffset: match.start, extentOffset: match.end),
+          );
+          expect(boxes, isNotEmpty);
+          expect(
+            boxes.fold<double>(0, (width, box) => width + box.right - box.left),
+            greaterThan(1),
+            reason: '${match.group(0)} must occupy visible space in $name',
+          );
+        }
+      }
+
+      for (var i = 0; i < names.length; i++) {
+        if (connected) {
+          activeNode.publish(profile.snapshot.servers[i]);
+          await tester.pumpAndSettle();
+          expectVisibleDigits(
+            find.byKey(const Key('vpn-active-node')),
+            names[i],
+          );
+        }
+        final row = find.byKey(ValueKey(VpnSelection.server('server-$i')));
+        await tester.scrollUntilVisible(row, 100, scrollable: scrollable);
+        await tester.pumpAndSettle();
+        expectVisibleDigits(row, names[i]);
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final scale in [.8, 1.4, 2.5]) {
     homeTest('all long server and provider text remains visible at scale=$scale', (
