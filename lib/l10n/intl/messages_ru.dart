@@ -84,25 +84,28 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m25(count) => "${count} прокси";
 
-  static String m26(count) =>
-      "${Intl.plural(count, one: '${count} правило', few: '${count} правила', many: '${count} правил', other: '${count} правила')}";
+  static String m26(strategy) =>
+      "${strategy}: текущие данные будут перезаписаны. Это действие нельзя отменить.";
 
   static String m27(count) =>
+      "${Intl.plural(count, one: '${count} правило', few: '${count} правила', many: '${count} правил', other: '${count} правила')}";
+
+  static String m28(count) =>
       "${Intl.plural(count, one: '${count} секунда', few: '${count} секунды', many: '${count} секунд', other: '${count} секунды')}";
 
-  static String m28(count) => "Выбрано: ${count}";
+  static String m29(count) => "Выбрано: ${count}";
 
-  static String m29(label) => "Значение «${label}» должно быть URL";
+  static String m30(label) => "Значение «${label}» должно быть URL";
 
-  static String m30(details) =>
+  static String m31(details) =>
       "Диагностический код (можно безопасно отправить): ${details}";
 
-  static String m31(completed, total) =>
+  static String m32(completed, total) =>
       "Подготовка списков серверов и правил… ${completed}/${total}";
 
-  static String m32(value) => "${value} мс";
+  static String m33(value) => "${value} мс";
 
-  static String m33(count) =>
+  static String m34(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -292,6 +295,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "closeConnections": MessageLookupByLibrary.simpleMessage(
       "Закрыть соединения",
     ),
+    "closeConnectionsTip": MessageLookupByLibrary.simpleMessage(
+      "Закрыть все активные соединения? Приложениям может потребоваться переподключиться.",
+    ),
     "color": MessageLookupByLibrary.simpleMessage("Цвет"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("Цветовые схемы"),
     "columns": MessageLookupByLibrary.simpleMessage("Столбцы"),
@@ -318,6 +324,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("Подключено"),
     "connecting": MessageLookupByLibrary.simpleMessage("Подключение..."),
     "connection": MessageLookupByLibrary.simpleMessage("Соединение"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage(
+      "Ошибка подключения",
+    ),
     "connections": MessageLookupByLibrary.simpleMessage("Соединения"),
     "connectionsDesc": MessageLookupByLibrary.simpleMessage(
       "Просмотр данных о текущих соединениях",
@@ -566,9 +575,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Введите содержимое правила",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Эта система не выдаёт список установленных приложений без разрешения. Предоставьте его, чтобы настроить прокси для отдельных приложений.",
     ),
@@ -776,6 +786,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "palette": MessageLookupByLibrary.simpleMessage("Палитра"),
     "password": MessageLookupByLibrary.simpleMessage("Пароль"),
     "paste": MessageLookupByLibrary.simpleMessage("Вставить"),
+    "pauseAutoScroll": MessageLookupByLibrary.simpleMessage(
+      "Приостановить автопрокрутку",
+    ),
     "pickFromAlbum": MessageLookupByLibrary.simpleMessage("Выбрать из галереи"),
     "pinWindow": MessageLookupByLibrary.simpleMessage(
       "Закрепить поверх всех окон",
@@ -911,6 +924,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "restoreAllData": MessageLookupByLibrary.simpleMessage(
       "Восстановить все данные",
     ),
+    "restoreConfirmTip": m26,
     "restoreException": MessageLookupByLibrary.simpleMessage(
       "Ошибка восстановления",
     ),
@@ -934,6 +948,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage(
       "Восстановление выполнено",
+    ),
+    "resumeAutoScroll": MessageLookupByLibrary.simpleMessage(
+      "Возобновить автопрокрутку",
     ),
     "routeAddress": MessageLookupByLibrary.simpleMessage("Адреса маршрутов"),
     "routeAddressDesc": MessageLookupByLibrary.simpleMessage(
@@ -1064,7 +1081,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleSet": MessageLookupByLibrary.simpleMessage("Набор правил"),
     "ruleTarget": MessageLookupByLibrary.simpleMessage("Цель правила"),
     "rules": MessageLookupByLibrary.simpleMessage("Правила"),
-    "rulesCount": m26,
+    "rulesCount": m27,
     "save": MessageLookupByLibrary.simpleMessage("Сохранить"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("Сохранить изменения?"),
     "script": MessageLookupByLibrary.simpleMessage("Скрипт"),
@@ -1076,7 +1093,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "search": MessageLookupByLibrary.simpleMessage("Поиск"),
     "seconds": MessageLookupByLibrary.simpleMessage("секунд"),
-    "secondsCount": m27,
+    "secondsCount": m28,
     "selectAll": MessageLookupByLibrary.simpleMessage("Выбрать всё"),
     "selectMatchTarget": MessageLookupByLibrary.simpleMessage(
       "Выбрать MATCH-TARGET",
@@ -1095,7 +1112,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Выберите подправило",
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Выбрано"),
-    "selectedCountTitle": m28,
+    "selectedCountTitle": m29,
     "settings": MessageLookupByLibrary.simpleMessage("Настройки"),
     "show": MessageLookupByLibrary.simpleMessage("Показать"),
     "showLess": MessageLookupByLibrary.simpleMessage("Свернуть"),
@@ -1220,7 +1237,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("Отдача"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("Получить профиль по URL"),
-    "urlTip": m29,
+    "urlTip": m30,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системный hosts",
@@ -1294,7 +1311,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
       "Импортируйте ссылку на подписку от вашего VPN-провайдера.",
     ),
-    "vpnImportDiagnostic": m30,
+    "vpnImportDiagnostic": m31,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage(
       "Загрузка конфигурации…",
     ),
@@ -1307,7 +1324,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportGeodata": MessageLookupByLibrary.simpleMessage(
       "Подготовка географических баз данных…",
     ),
-    "vpnImportProviders": m31,
+    "vpnImportProviders": m32,
     "vpnImportSaving": MessageLookupByLibrary.simpleMessage(
       "Проверка и сохранение конфигурации…",
     ),
@@ -1325,7 +1342,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Введите корректную ссылку на подписку HTTP или HTTPS.",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("Ошибка проверки"),
-    "vpnLatencyMs": m32,
+    "vpnLatencyMs": m33,
     "vpnLatencyTesting": MessageLookupByLibrary.simpleMessage("Проверка…"),
     "vpnLatencyTimeout": MessageLookupByLibrary.simpleMessage("Время истекло"),
     "vpnLatencyUnreachable": MessageLookupByLibrary.simpleMessage("Недоступен"),
@@ -1338,6 +1355,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vpnNodeUnavailable": MessageLookupByLibrary.simpleMessage(
       "Текущий узел недоступен",
+    ),
+    "vpnNotReady": MessageLookupByLibrary.simpleMessage(
+      "Подключение пока недоступно",
     ),
     "vpnPasteClipboard": MessageLookupByLibrary.simpleMessage(
       "Вставить из буфера обмена",
@@ -1407,7 +1427,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "whitelistMode": MessageLookupByLibrary.simpleMessage(
       "Режим белого списка",
     ),
-    "yearsAgo": m33,
+    "yearsAgo": m34,
     "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
   };
 }

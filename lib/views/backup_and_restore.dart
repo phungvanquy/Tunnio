@@ -107,7 +107,16 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
     final restoreOption = await dialogs.showCommonDialog<RestoreOption>(
       child: const RestoreOptionsDialog(),
     );
-    if (restoreOption == null || !context.mounted) return;
+    if (restoreOption == null || !mounted) return;
+    final strategyLabel = restoreOption == RestoreOption.all
+        ? context.appLocalizations.restoreAllData
+        : context.appLocalizations.restoreOnlyConfig;
+    final confirm = await dialogs.showMessage(
+      message: TextSpan(
+        text: context.appLocalizations.restoreConfirmTip(strategyLabel),
+      ),
+    );
+    if (confirm != true || !mounted) return;
     unawaited(_restoreOnWebDAV(restoreOption));
   }
 
@@ -140,6 +149,15 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
   Future<void> _restoreOnLocal(RestoreOption option) async {
     final backupAction = ref.read(backupActionProvider.notifier);
     final appLocalizations = context.appLocalizations;
+    final strategyLabel = option == RestoreOption.all
+        ? appLocalizations.restoreAllData
+        : appLocalizations.restoreOnlyConfig;
+    final confirm = await dialogs.showMessage(
+      message: TextSpan(
+        text: appLocalizations.restoreConfirmTip(strategyLabel),
+      ),
+    );
+    if (confirm != true || !mounted) return;
     final file = await picker.pickerFile();
     final path = file?.path;
     if (path == null) return;
@@ -305,29 +323,39 @@ class _DavConnectionIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = context.appLocalizations;
     return ValueListenableBuilder(
       valueListenable: connection,
       builder: (context, isConnected, _) {
+        final label = isConnected == null
+            ? text.connecting
+            : isConnected
+            ? text.connected
+            : text.connectionFailed;
         return Center(
-          child: FadeThroughBox(
-            child: isConnected == null
-                ? const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CommonCircleLoading(),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: !isConnected
-                          ? context.colorScheme.error
-                          : Colors.green.harmonizeWith(
-                              context.colorScheme.primary,
-                            ),
+          child: Semantics(
+            label: label,
+            liveRegion: true,
+            child: FadeThroughBox(
+              child: isConnected == null
+                  ? const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CommonCircleLoading(),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: !isConnected
+                            ? context.colorScheme.error
+                            : Colors.green.harmonizeWith(
+                                context.colorScheme.primary,
+                              ),
+                      ),
+                      width: 12,
+                      height: 12,
                     ),
-                    width: 12,
-                    height: 12,
-                  ),
+            ),
           ),
         );
       },
@@ -434,7 +462,11 @@ class _WebDAVFormDialogState extends ConsumerState<WebDAVFormDialog> {
     Navigator.pop(context);
   }
 
-  void _delete() {
+  Future<void> _delete() async {
+    final confirm = await dialogs.showMessage(
+      message: TextSpan(text: context.appLocalizations.deleteTip('WebDAV')),
+    );
+    if (confirm != true || !mounted) return;
     ref.read(davSettingProvider.notifier).update((_) => null);
     Navigator.pop(context);
   }

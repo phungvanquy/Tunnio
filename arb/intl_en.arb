@@ -680,5 +680,11 @@
   "vpnCurrentNode": "Current node",
   "vpnNodeResolving": "Checking current node…",
   "vpnNodeUnavailable": "Current node unavailable",
-  "vpnRoutingNodes": "Nodes depend on routing rules"
+  "vpnRoutingNodes": "Nodes depend on routing rules",
+  "vpnNotReady": "Connection is not available yet",
+  "closeConnectionsTip": "Close all active connections? Apps may need to reconnect.",
+  "pauseAutoScroll": "Pause auto-scroll",
+  "resumeAutoScroll": "Resume auto-scroll",
+  "connectionFailed": "Connection failed",
+  "restoreConfirmTip": "{strategy}: current data will be overwritten. This cannot be undone."
 }

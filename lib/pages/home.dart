@@ -282,6 +282,8 @@ class _ConnectionControlState extends ConsumerState<_ConnectionControl> {
           foreground: foreground,
           connected: connected,
           working: working || _submittedIntent != null,
+          unavailable:
+              !working && _submittedIntent == null && !ready && !active,
           label: action,
           duration: motion,
           dimension: compact ? 88 : 96,
@@ -418,6 +420,7 @@ class _ConnectionButton extends StatelessWidget {
     required this.foreground,
     required this.connected,
     required this.working,
+    required this.unavailable,
     required this.label,
     required this.duration,
     required this.dimension,
@@ -428,6 +431,7 @@ class _ConnectionButton extends StatelessWidget {
   final Color foreground;
   final bool connected;
   final bool working;
+  final bool unavailable;
   final String label;
   final Duration duration;
   final double dimension;
@@ -436,6 +440,8 @@ class _ConnectionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final text = context.appLocalizations;
+    final effectiveLabel = unavailable ? text.vpnNotReady : label;
     return SizedBox.square(
       dimension: dimension,
       child: Stack(
@@ -467,7 +473,7 @@ class _ConnectionButton extends StatelessWidget {
                 ],
               ),
               child: Tooltip(
-                message: label,
+                message: effectiveLabel,
                 excludeFromSemantics: true,
                 child: FilledButton(
                   key: const Key('vpn-connect'),
@@ -477,12 +483,16 @@ class _ConnectionButton extends StatelessWidget {
                     animationDuration: duration,
                     backgroundColor: color,
                     foregroundColor: foreground,
-                    disabledBackgroundColor: color,
-                    disabledForegroundColor: foreground,
+                    disabledBackgroundColor: unavailable
+                        ? color.withValues(alpha: 0.38)
+                        : color,
+                    disabledForegroundColor: unavailable
+                        ? foreground.withValues(alpha: 0.38)
+                        : foreground,
                   ),
                   onPressed: onPressed,
                   child: Semantics(
-                    label: label,
+                    label: effectiveLabel,
                     child: const Icon(Icons.power_settings_new, size: 32),
                   ),
                 ),

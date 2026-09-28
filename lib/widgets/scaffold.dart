@@ -92,15 +92,21 @@ class CommonScaffoldState extends State<CommonScaffold> {
     return Theme(
       data: theme.copyWith(
         appBarTheme: theme.appBarTheme.copyWith(
-          backgroundColor: colorScheme.brightness == Brightness.dark
-              ? Colors.grey[900]
-              : Colors.white,
-          iconTheme: theme.primaryIconTheme.copyWith(color: Colors.grey),
-          titleTextStyle: theme.textTheme.titleLarge,
-          toolbarTextStyle: theme.textTheme.bodyMedium,
+          backgroundColor: colorScheme.surfaceContainerHigh,
+          iconTheme: theme.primaryIconTheme.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+          titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+            color: colorScheme.onSurface,
+          ),
+          toolbarTextStyle: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurface,
+          ),
         ),
         inputDecorationTheme: InputDecorationTheme(
-          hintStyle: theme.inputDecorationTheme.hintStyle,
+          hintStyle: theme.inputDecorationTheme.hintStyle?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
           border: InputBorder.none,
         ),
       ),

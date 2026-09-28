@@ -680,5 +680,11 @@
   "vpnCurrentNode": "現在のノード",
   "vpnNodeResolving": "現在のノードを確認中…",
   "vpnNodeUnavailable": "現在のノードを取得できません",
-  "vpnRoutingNodes": "ノードはルーティングルールによって決まります"
+  "vpnRoutingNodes": "ノードはルーティングルールによって決まります",
+  "vpnNotReady": "まだ接続できません",
+  "closeConnectionsTip": "すべてのアクティブな接続を閉じますか？アプリの再接続が必要になる場合があります。",
+  "pauseAutoScroll": "自動スクロールを一時停止",
+  "resumeAutoScroll": "自動スクロールを再開",
+  "connectionFailed": "接続に失敗しました",
+  "restoreConfirmTip": "{strategy}：現在のデータは上書きされ、元に戻せません。"
 }

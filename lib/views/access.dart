@@ -118,18 +118,22 @@ class _AccessViewState extends ConsumerState<AccessView> {
     }
 
     final appLocalizations = context.appLocalizations;
+    final tooltip = isSelectedAll
+        ? appLocalizations.cancelSelectAll
+        : appLocalizations.selectAll;
     return FadeRotationScaleBox(
       alignment: Alignment.centerRight,
       child: isSelectedAll
           ? FloatingActionButton.extended(
               key: const ValueKey(true),
+              tooltip: tooltip,
               onPressed: onPressed,
               label: Text(appLocalizations.cancelSelectAll),
               icon: const Icon(Icons.deselect),
             )
           : FloatingActionButton.extended(
               key: const ValueKey(false),
-              tooltip: appLocalizations.selectAll,
+              tooltip: tooltip,
               onPressed: onPressed,
               label: Text(appLocalizations.selectAll),
               icon: const Icon(Icons.select_all),

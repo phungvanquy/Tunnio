@@ -116,9 +116,13 @@ class _LogsViewState extends ConsumerState<LogsView> {
         valueListenable: _listController,
         builder: (_, state, _) {
           final autoScrollToEnd = state.autoScrollToEnd;
+          final tooltip = autoScrollToEnd
+              ? appLocalizations.pauseAutoScroll
+              : appLocalizations.resumeAutoScroll;
           return FadeRotationScaleBox(
             child: FloatingActionButton(
               key: ValueKey(autoScrollToEnd),
+              tooltip: tooltip,
               onPressed: () {
                 if (autoScrollToEnd) {
                   _listController.setAutoScrollToEnd(false);

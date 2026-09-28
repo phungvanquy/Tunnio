@@ -680,5 +680,11 @@
   "vpnCurrentNode": "当前节点",
   "vpnNodeResolving": "正在检查当前节点…",
   "vpnNodeUnavailable": "无法获取当前节点",
-  "vpnRoutingNodes": "节点由路由规则决定"
+  "vpnRoutingNodes": "节点由路由规则决定",
+  "vpnNotReady": "暂时无法连接",
+  "closeConnectionsTip": "关闭所有活动连接？应用可能需要重新连接。",
+  "pauseAutoScroll": "暂停自动滚动",
+  "resumeAutoScroll": "恢复自动滚动",
+  "connectionFailed": "连接失败",
+  "restoreConfirmTip": "{strategy}：当前数据将被覆盖，且无法撤销。"
 }

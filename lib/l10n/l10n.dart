@@ -5724,6 +5724,66 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Connection is not available yet`
+  String get vpnNotReady {
+    return Intl.message(
+      'Connection is not available yet',
+      name: 'vpnNotReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Close all active connections? Apps may need to reconnect.`
+  String get closeConnectionsTip {
+    return Intl.message(
+      'Close all active connections? Apps may need to reconnect.',
+      name: 'closeConnectionsTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pause auto-scroll`
+  String get pauseAutoScroll {
+    return Intl.message(
+      'Pause auto-scroll',
+      name: 'pauseAutoScroll',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Resume auto-scroll`
+  String get resumeAutoScroll {
+    return Intl.message(
+      'Resume auto-scroll',
+      name: 'resumeAutoScroll',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection failed`
+  String get connectionFailed {
+    return Intl.message(
+      'Connection failed',
+      name: 'connectionFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{strategy}: current data will be overwritten. This cannot be undone.`
+  String restoreConfirmTip(Object strategy) {
+    return Intl.message(
+      '$strategy: current data will be overwritten. This cannot be undone.',
+      name: 'restoreConfirmTip',
+      desc: '',
+      args: [strategy],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

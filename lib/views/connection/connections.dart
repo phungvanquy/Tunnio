@@ -34,6 +34,12 @@ class _ConnectionsViewState extends ConsumerState<ConnectionsView>
       IconButton(
         tooltip: context.appLocalizations.closeConnections,
         onPressed: () async {
+          final confirm = await dialogs.showMessage(
+            message: TextSpan(
+              text: context.appLocalizations.closeConnectionsTip,
+            ),
+          );
+          if (confirm != true) return;
           unawaited(_core.closeConnections());
           await _refreshConnections();
         },

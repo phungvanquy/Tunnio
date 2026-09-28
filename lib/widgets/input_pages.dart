@@ -116,10 +116,16 @@ class _ListInputPageState extends ConsumerState<ListInputPage> {
     setState(() {});
   }
 
-  void _handleDelete() {
-    final selectedItems = ref.read(itemsProvider(_key));
+  Future<void> _handleDelete() async {
+    final confirm = await dialogs.showMessage(
+      message: TextSpan(
+        text: context.appLocalizations.deleteMultipTip(widget.title),
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    final currentSelected = ref.read(itemsProvider(_key));
     final newItems = _items
-        .where((item) => !selectedItems.contains(item))
+        .where((item) => !currentSelected.contains(item))
         .toList();
     _items = newItems;
     ref.read(itemsProvider(_key).notifier).value = {};
@@ -373,10 +379,16 @@ class _MapInputPageState extends ConsumerState<MapInputPage> {
     setState(() {});
   }
 
-  void _handleDelete() {
-    final selectedItems = ref.read(itemsProvider(_key));
+  Future<void> _handleDelete() async {
+    final confirm = await dialogs.showMessage(
+      message: TextSpan(
+        text: context.appLocalizations.deleteMultipTip(widget.title),
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    final currentSelected = ref.read(itemsProvider(_key));
     final newItems = _items
-        .where((item) => !selectedItems.contains(item.key))
+        .where((item) => !currentSelected.contains(item.key))
         .toList();
     _items = newItems;
     ref.read(itemsProvider(_key).notifier).value = {};

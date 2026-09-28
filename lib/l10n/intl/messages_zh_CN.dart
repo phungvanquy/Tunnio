@@ -75,21 +75,23 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m25(count) => "${count} 个代理";
 
-  static String m26(count) => "${count} 条规则";
+  static String m26(strategy) => "${strategy}：当前数据将被覆盖，且无法撤销。";
 
-  static String m27(count) => "${count} 秒";
+  static String m27(count) => "${count} 条规则";
 
-  static String m28(count) => "已选择 ${count} 项";
+  static String m28(count) => "${count} 秒";
 
-  static String m29(label) => "${label}必须为URL";
+  static String m29(count) => "已选择 ${count} 项";
 
-  static String m30(details) => "诊断代码（可安全分享）：${details}";
+  static String m30(label) => "${label}必须为URL";
 
-  static String m31(completed, total) => "正在准备节点和规则列表… ${completed}/${total}";
+  static String m31(details) => "诊断代码（可安全分享）：${details}";
 
-  static String m32(value) => "${value} 毫秒";
+  static String m32(completed, total) => "正在准备节点和规则列表… ${completed}/${total}";
 
-  static String m33(count) => "${count} 年前";
+  static String m33(value) => "${value} 毫秒";
+
+  static String m34(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -206,6 +208,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "clipboardImport": MessageLookupByLibrary.simpleMessage("剪贴板导入"),
     "close": MessageLookupByLibrary.simpleMessage("关闭"),
     "closeConnections": MessageLookupByLibrary.simpleMessage("关闭连接"),
+    "closeConnectionsTip": MessageLookupByLibrary.simpleMessage(
+      "关闭所有活动连接？应用可能需要重新连接。",
+    ),
     "color": MessageLookupByLibrary.simpleMessage("颜色"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("配色方案"),
     "columns": MessageLookupByLibrary.simpleMessage("列数"),
@@ -222,6 +227,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("已连接"),
     "connecting": MessageLookupByLibrary.simpleMessage("连接中..."),
     "connection": MessageLookupByLibrary.simpleMessage("连接"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage("连接失败"),
     "connections": MessageLookupByLibrary.simpleMessage("连接"),
     "connectionsDesc": MessageLookupByLibrary.simpleMessage("查看当前连接数据"),
     "connectivity": MessageLookupByLibrary.simpleMessage("连通性："),
@@ -533,6 +539,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "palette": MessageLookupByLibrary.simpleMessage("调色板"),
     "password": MessageLookupByLibrary.simpleMessage("密码"),
     "paste": MessageLookupByLibrary.simpleMessage("粘贴"),
+    "pauseAutoScroll": MessageLookupByLibrary.simpleMessage("暂停自动滚动"),
     "pickFromAlbum": MessageLookupByLibrary.simpleMessage("从相册选择"),
     "pinWindow": MessageLookupByLibrary.simpleMessage("窗口置顶"),
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage("请绑定WebDAV"),
@@ -624,6 +631,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "restartCoreTip": MessageLookupByLibrary.simpleMessage("您确定要重启核心吗？"),
     "restore": MessageLookupByLibrary.simpleMessage("恢复"),
     "restoreAllData": MessageLookupByLibrary.simpleMessage("恢复所有数据"),
+    "restoreConfirmTip": m26,
     "restoreException": MessageLookupByLibrary.simpleMessage("恢复异常"),
     "restoreFromFileDesc": MessageLookupByLibrary.simpleMessage("通过文件恢复数据"),
     "restoreFromWebDAVDesc": MessageLookupByLibrary.simpleMessage(
@@ -634,6 +642,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "restoreStrategyCompatible": MessageLookupByLibrary.simpleMessage("兼容"),
     "restoreStrategyOverride": MessageLookupByLibrary.simpleMessage("覆盖"),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage("恢复成功"),
+    "resumeAutoScroll": MessageLookupByLibrary.simpleMessage("恢复自动滚动"),
     "routeAddress": MessageLookupByLibrary.simpleMessage("路由地址"),
     "routeAddressDesc": MessageLookupByLibrary.simpleMessage("配置监听路由地址"),
     "routeMode": MessageLookupByLibrary.simpleMessage("路由模式"),
@@ -729,7 +738,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleSet": MessageLookupByLibrary.simpleMessage("规则集"),
     "ruleTarget": MessageLookupByLibrary.simpleMessage("规则目标"),
     "rules": MessageLookupByLibrary.simpleMessage("规则"),
-    "rulesCount": m26,
+    "rulesCount": m27,
     "save": MessageLookupByLibrary.simpleMessage("保存"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("是否保存更改？"),
     "script": MessageLookupByLibrary.simpleMessage("脚本"),
@@ -739,7 +748,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "scrollToSelected": MessageLookupByLibrary.simpleMessage("滚动到已选"),
     "search": MessageLookupByLibrary.simpleMessage("搜索"),
     "seconds": MessageLookupByLibrary.simpleMessage("秒"),
-    "secondsCount": m27,
+    "secondsCount": m28,
     "selectAll": MessageLookupByLibrary.simpleMessage("全选"),
     "selectMatchTarget": MessageLookupByLibrary.simpleMessage(
       "选择 MATCH-TARGET",
@@ -750,7 +759,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selectSplitStrategy": MessageLookupByLibrary.simpleMessage("请选择分流策略"),
     "selectSubRule": MessageLookupByLibrary.simpleMessage("请选择子规则"),
     "selected": MessageLookupByLibrary.simpleMessage("已选择"),
-    "selectedCountTitle": m28,
+    "selectedCountTitle": m29,
     "settings": MessageLookupByLibrary.simpleMessage("设置"),
     "show": MessageLookupByLibrary.simpleMessage("显示"),
     "showLess": MessageLookupByLibrary.simpleMessage("收起"),
@@ -841,7 +850,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("上传"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("通过URL获取配置文件"),
-    "urlTip": m29,
+    "urlTip": m30,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "usedTraffic": MessageLookupByLibrary.simpleMessage("已用流量"),
@@ -897,14 +906,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
       "导入 VPN 服务商提供的订阅链接。",
     ),
-    "vpnImportDiagnostic": m30,
+    "vpnImportDiagnostic": m31,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage("正在下载配置…"),
     "vpnImportFailed": MessageLookupByLibrary.simpleMessage(
       "无法导入配置。已保存的配置未被替换。请检查链接和网络连接后重试。",
     ),
     "vpnImportFinalizing": MessageLookupByLibrary.simpleMessage("正在完成配置更新…"),
     "vpnImportGeodata": MessageLookupByLibrary.simpleMessage("正在准备地理数据库…"),
-    "vpnImportProviders": m31,
+    "vpnImportProviders": m32,
     "vpnImportSaving": MessageLookupByLibrary.simpleMessage("正在校验并保存配置…"),
     "vpnImportTimedOut": MessageLookupByLibrary.simpleMessage(
       "配置下载超时。已保存的配置未被替换。请检查网络连接后重试。",
@@ -916,7 +925,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "请输入有效的 HTTP 或 HTTPS 订阅链接。",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("测试失败"),
-    "vpnLatencyMs": m32,
+    "vpnLatencyMs": m33,
     "vpnLatencyTesting": MessageLookupByLibrary.simpleMessage("测试中…"),
     "vpnLatencyTimeout": MessageLookupByLibrary.simpleMessage("超时"),
     "vpnLatencyUnreachable": MessageLookupByLibrary.simpleMessage("无法连接"),
@@ -924,6 +933,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnLocalProxy": MessageLookupByLibrary.simpleMessage("仅本地代理 · VPN 未启用"),
     "vpnNodeResolving": MessageLookupByLibrary.simpleMessage("正在检查当前节点…"),
     "vpnNodeUnavailable": MessageLookupByLibrary.simpleMessage("无法获取当前节点"),
+    "vpnNotReady": MessageLookupByLibrary.simpleMessage("暂时无法连接"),
     "vpnPasteClipboard": MessageLookupByLibrary.simpleMessage("从剪贴板粘贴"),
     "vpnPermissionDenied": MessageLookupByLibrary.simpleMessage(
       "未获得权限。请重新连接或检查系统设置。",
@@ -972,7 +982,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnTip": MessageLookupByLibrary.simpleMessage("重启VPN后改变生效"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
-    "yearsAgo": m33,
+    "yearsAgo": m34,
     "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }
