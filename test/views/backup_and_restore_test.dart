@@ -1,5 +1,7 @@
+import 'package:fl_clash/common/dav_client.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/database.dart';
@@ -19,14 +21,46 @@ const _existing = DAVProps(
   fileName: 'custom.zip',
 );
 
+class _BackupAction extends BackupAction {
+  final restored = <RestoreOption>[];
+
+  @override
+  void build() {}
+
+  @override
+  Future<void> restore(RestoreOption option) async {
+    restored.add(option);
+  }
+}
+
+class _DavClient extends DAVClient {
+  _DavClient() : super(_existing);
+
+  int restores = 0;
+
+  @override
+  Future<bool> ping() async => true;
+
+  @override
+  Future<bool> restore() async {
+    restores++;
+    return true;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late ProviderContainer container;
+  late _BackupAction backupAction;
 
   setUp(() {
+    backupAction = _BackupAction();
     container = ProviderContainer(
-      overrides: [profilesProvider.overrideWith(TestProfiles.new)],
+      overrides: [
+        profilesProvider.overrideWith(TestProfiles.new),
+        backupActionProvider.overrideWith(() => backupAction),
+      ],
     );
     globalState.container = container;
     container.read(viewSizeProvider.notifier).value = const Size(1200, 1400);
@@ -242,5 +276,87 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.visibility_off), findsOneWidget);
     });
+  });
+
+  group('BackupAndRestore', () {
+    testWidgets('WebDAV indicator announces connection state', (tester) async {
+      final semantics = tester.ensureSemantics();
+      final client = _DavClient();
+      final connection = DAVConnectionController(createClient: (_) => client);
+      container.read(davSettingProvider.notifier).update((_) => _existing);
+      await pumpDialog(tester, BackupAndRestore(connection: connection));
+
+      expect(find.bySemanticsLabel(RegExp('Connected')), findsWidgets);
+      connection.value = false;
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel(RegExp('Connection failed')), findsWidgets);
+      semantics.dispose();
+    });
+
+    testWidgets('confirmed WebDAV restore uses the chosen option', (
+      tester,
+    ) async {
+      final client = _DavClient();
+      final connection = DAVConnectionController(createClient: (_) => client);
+      container.read(davSettingProvider.notifier).update((_) => _existing);
+      await pumpDialog(tester, BackupAndRestore(connection: connection));
+
+      await tester.tap(find.text('Restore data from WebDAV'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Restore profiles only'));
+      await tester.pumpAndSettle();
+      expect(client.restores, 0);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Confirm'));
+      await tester.pumpAndSettle();
+
+      expect(client.restores, 1);
+      expect(backupAction.restored, [RestoreOption.onlyProfiles]);
+      expect(tester.takeException(), isNull);
+    });
+
+    for (final option in ['Restore profiles only', 'Restore all data']) {
+      testWidgets('local $option cancellation leaves data untouched', (
+        tester,
+      ) async {
+        await pumpDialog(tester, const BackupAndRestore());
+
+        await tester.tap(find.text('Restore data from a file'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(option));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('may be replaced'), findsOneWidget);
+        expect(backupAction.restored, isEmpty);
+        await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+        await tester.pumpAndSettle();
+
+        expect(backupAction.restored, isEmpty);
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('WebDAV $option cancellation does not download', (
+        tester,
+      ) async {
+        final client = _DavClient();
+        final connection = DAVConnectionController(createClient: (_) => client);
+        container.read(davSettingProvider.notifier).update((_) => _existing);
+        await pumpDialog(tester, BackupAndRestore(connection: connection));
+
+        await tester.tap(find.text('Restore data from WebDAV'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(option));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('may be replaced'), findsOneWidget);
+        expect(client.restores, 0);
+        await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+        await tester.pumpAndSettle();
+
+        expect(client.restores, 0);
+        expect(backupAction.restored, isEmpty);
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

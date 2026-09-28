@@ -84,27 +84,24 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m25(count) =>
       "${Intl.plural(count, one: '1 proxy', other: '${count} proxies')}";
 
-  static String m26(strategy) =>
-      "${strategy}: current data will be overwritten. This cannot be undone.";
-
-  static String m27(count) =>
+  static String m26(count) =>
       "${Intl.plural(count, one: '1 rule', other: '${count} rules')}";
 
-  static String m28(count) =>
+  static String m27(count) =>
       "${Intl.plural(count, one: '1 second', other: '${count} seconds')}";
 
-  static String m29(count) => "${count} selected";
+  static String m28(count) => "${count} selected";
 
-  static String m30(label) => "${label} must be a URL";
+  static String m29(label) => "${label} must be a URL";
 
-  static String m31(details) => "Diagnostic code (safe to share): ${details}";
+  static String m30(details) => "Diagnostic code (safe to share): ${details}";
 
-  static String m32(completed, total) =>
+  static String m31(completed, total) =>
       "Preparing server and rule lists… ${completed}/${total}";
 
-  static String m33(value) => "${value} ms";
+  static String m32(value) => "${value} ms";
 
-  static String m34(count) =>
+  static String m33(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -889,8 +886,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Are you sure you want to restart the core?",
     ),
     "restore": MessageLookupByLibrary.simpleMessage("Restore"),
+    "restoreAllConfirmTip": MessageLookupByLibrary.simpleMessage(
+      "Restore all data? Existing profiles, rules, and settings may be replaced. This cannot be undone.",
+    ),
     "restoreAllData": MessageLookupByLibrary.simpleMessage("Restore all data"),
-    "restoreConfirmTip": m26,
     "restoreException": MessageLookupByLibrary.simpleMessage("Restore error"),
     "restoreFromFileDesc": MessageLookupByLibrary.simpleMessage(
       "Restore data from a file",
@@ -900,6 +899,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "restoreOnlyConfig": MessageLookupByLibrary.simpleMessage(
       "Restore profiles only",
+    ),
+    "restoreProfilesConfirmTip": MessageLookupByLibrary.simpleMessage(
+      "Restore profiles only? Existing profiles and related rules may be replaced. This cannot be undone.",
     ),
     "restoreStrategy": MessageLookupByLibrary.simpleMessage("Restore strategy"),
     "restoreStrategyCompatible": MessageLookupByLibrary.simpleMessage(
@@ -1037,7 +1039,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleSet": MessageLookupByLibrary.simpleMessage("Rule set"),
     "ruleTarget": MessageLookupByLibrary.simpleMessage("Rule target"),
     "rules": MessageLookupByLibrary.simpleMessage("Rules"),
-    "rulesCount": m27,
+    "rulesCount": m26,
     "save": MessageLookupByLibrary.simpleMessage("Save"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("Save the changes?"),
     "script": MessageLookupByLibrary.simpleMessage("Script"),
@@ -1049,7 +1051,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "search": MessageLookupByLibrary.simpleMessage("Search"),
     "seconds": MessageLookupByLibrary.simpleMessage("seconds"),
-    "secondsCount": m28,
+    "secondsCount": m27,
     "selectAll": MessageLookupByLibrary.simpleMessage("Select all"),
     "selectMatchTarget": MessageLookupByLibrary.simpleMessage(
       "Select MATCH-TARGET",
@@ -1068,7 +1070,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Please select a sub-rule",
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
-    "selectedCountTitle": m29,
+    "selectedCountTitle": m28,
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
     "show": MessageLookupByLibrary.simpleMessage("Show"),
     "showLess": MessageLookupByLibrary.simpleMessage("Collapse"),
@@ -1185,7 +1187,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlDesc": MessageLookupByLibrary.simpleMessage(
       "Obtain a profile from a URL",
     ),
-    "urlTip": m30,
+    "urlTip": m29,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "usedTraffic": MessageLookupByLibrary.simpleMessage("Used traffic"),
@@ -1251,7 +1253,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
       "Import the subscription URL from your VPN provider.",
     ),
-    "vpnImportDiagnostic": m31,
+    "vpnImportDiagnostic": m30,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage(
       "Downloading configuration…",
     ),
@@ -1264,7 +1266,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportGeodata": MessageLookupByLibrary.simpleMessage(
       "Preparing geographic databases…",
     ),
-    "vpnImportProviders": m32,
+    "vpnImportProviders": m31,
     "vpnImportSaving": MessageLookupByLibrary.simpleMessage(
       "Verifying and saving configuration…",
     ),
@@ -1282,7 +1284,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Enter a valid HTTP or HTTPS subscription URL.",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("Test failed"),
-    "vpnLatencyMs": m33,
+    "vpnLatencyMs": m32,
     "vpnLatencyTesting": MessageLookupByLibrary.simpleMessage("Testing…"),
     "vpnLatencyTimeout": MessageLookupByLibrary.simpleMessage("Timed out"),
     "vpnLatencyUnreachable": MessageLookupByLibrary.simpleMessage(
@@ -1363,7 +1365,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "WebDAV configuration",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
-    "yearsAgo": m34,
+    "yearsAgo": m33,
     "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

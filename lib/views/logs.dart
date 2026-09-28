@@ -132,9 +132,12 @@ class _LogsViewState extends ConsumerState<LogsView> {
                   );
                 }
               },
-              child: autoScrollToEnd
-                  ? const Icon(Icons.block)
-                  : const Icon(Icons.vertical_align_top),
+              child: Semantics(
+                label: tooltip,
+                child: autoScrollToEnd
+                    ? const Icon(Icons.block)
+                    : const Icon(Icons.vertical_align_top),
+              ),
             ),
           );
         },

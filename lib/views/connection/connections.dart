@@ -39,7 +39,7 @@ class _ConnectionsViewState extends ConsumerState<ConnectionsView>
               text: context.appLocalizations.closeConnectionsTip,
             ),
           );
-          if (confirm != true) return;
+          if (confirm != true || !mounted) return;
           unawaited(_core.closeConnections());
           await _refreshConnections();
         },

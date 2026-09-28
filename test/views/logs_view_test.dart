@@ -114,6 +114,20 @@ void main() {
     expect(hintFinder(), findsNothing);
   });
 
+  testWidgets('auto-scroll button names both actions', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await pumpLogsView(tester);
+
+    expect(find.byTooltip('Pause auto-scroll'), findsOneWidget);
+    expect(find.bySemanticsLabel('Pause auto-scroll'), findsWidgets);
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Resume auto-scroll'), findsOneWidget);
+    expect(find.bySemanticsLabel('Resume auto-scroll'), findsWidgets);
+    semantics.dispose();
+  });
+
   group('LogListController', () {
     final logs = seedLogs();
 

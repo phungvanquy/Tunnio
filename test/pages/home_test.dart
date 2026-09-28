@@ -318,6 +318,46 @@ void main() {
     expect(find.text('Connected'), findsNothing);
   });
 
+  homeTest('unready connection has a distinct disabled label and appearance', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    setProfile(configured().copyWith.snapshot(generation: null));
+    await pump(tester);
+
+    final buttonFinder = find.byKey(const Key('vpn-connect'));
+    final unavailable = tester.widget<FilledButton>(buttonFinder);
+    expect(unavailable.onPressed, isNull);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Tooltip &&
+            widget.message == 'Connection is not available yet',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel('Connection is not available yet'),
+      findsWidgets,
+    );
+    final disabledColor = unavailable.style!.backgroundColor!.resolve({
+      WidgetState.disabled,
+    });
+
+    setProfile(configured());
+    await tester.pump();
+    final ready = tester.widget<FilledButton>(buttonFinder);
+    expect(ready.onPressed, isNotNull);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is Tooltip && widget.message == 'Connect',
+      ),
+      findsOneWidget,
+    );
+    expect(ready.style!.backgroundColor!.resolve({}), isNot(disabledColor));
+    semantics.dispose();
+  });
+
   homeTest('connecting can be cancelled through the same action', (
     tester,
   ) async {

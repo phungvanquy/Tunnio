@@ -228,7 +228,9 @@ class CommonScaffoldState extends State<CommonScaffold> {
             autofocus: true,
             controller: _textController,
             inputFormatters: TextInputLimits.limit(TextInputLimits.search),
-            style: context.textTheme.titleLarge,
+            style: context.textTheme.titleLarge?.copyWith(
+              color: context.colorScheme.onSurface,
+            ),
             onChanged: (value) {
               if (startState != null) {
                 startState.onSearch(value);

@@ -2,6 +2,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/core/interface.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/connection/connections.dart';
@@ -72,6 +73,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    container.read(viewSizeProvider.notifier).value = const Size(1400, 1000);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -169,5 +171,59 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
 
     verifyNever(core.getConnections);
+  });
+
+  testWidgets('closing all connections requires confirmation', (tester) async {
+    when(core.getConnections).thenAnswer((_) async => const <TrackerInfo>[]);
+    when(core.closeConnections).thenAnswer((_) async => true);
+
+    await pumpConnections(tester);
+    await tester.tap(find.byIcon(Icons.delete_sweep_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+    verifyNever(core.closeConnections);
+
+    await tester.tap(find.byIcon(Icons.delete_sweep_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Confirm'));
+    await tester.pumpAndSettle();
+    verify(core.closeConnections).called(1);
+    expect(tester.takeException(), isNull);
+
+    await teardownView(tester);
+  });
+
+  testWidgets('confirmation does nothing after the view is removed', (
+    tester,
+  ) async {
+    when(core.getConnections).thenAnswer((_) async => const <TrackerInfo>[]);
+    container.read(viewSizeProvider.notifier).value = const Size(1400, 1000);
+    final visible = ValueNotifier(true);
+    addTearDown(visible.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: TestApp(
+          child: ValueListenableBuilder<bool>(
+            valueListenable: visible,
+            builder: (_, show, _) =>
+                show ? const ConnectionsView() : const SizedBox.shrink(),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.delete_sweep_outlined));
+    await tester.pumpAndSettle();
+
+    visible.value = false;
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Confirm'));
+    await tester.pumpAndSettle();
+
+    verifyNever(core.closeConnections);
+    expect(tester.takeException(), isNull);
   });
 }

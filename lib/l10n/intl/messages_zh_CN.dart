@@ -75,23 +75,21 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m25(count) => "${count} 个代理";
 
-  static String m26(strategy) => "${strategy}：当前数据将被覆盖，且无法撤销。";
+  static String m26(count) => "${count} 条规则";
 
-  static String m27(count) => "${count} 条规则";
+  static String m27(count) => "${count} 秒";
 
-  static String m28(count) => "${count} 秒";
+  static String m28(count) => "已选择 ${count} 项";
 
-  static String m29(count) => "已选择 ${count} 项";
+  static String m29(label) => "${label}必须为URL";
 
-  static String m30(label) => "${label}必须为URL";
+  static String m30(details) => "诊断代码（可安全分享）：${details}";
 
-  static String m31(details) => "诊断代码（可安全分享）：${details}";
+  static String m31(completed, total) => "正在准备节点和规则列表… ${completed}/${total}";
 
-  static String m32(completed, total) => "正在准备节点和规则列表… ${completed}/${total}";
+  static String m32(value) => "${value} 毫秒";
 
-  static String m33(value) => "${value} 毫秒";
-
-  static String m34(count) => "${count} 年前";
+  static String m33(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -630,14 +628,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "restart": MessageLookupByLibrary.simpleMessage("重启"),
     "restartCoreTip": MessageLookupByLibrary.simpleMessage("您确定要重启核心吗？"),
     "restore": MessageLookupByLibrary.simpleMessage("恢复"),
+    "restoreAllConfirmTip": MessageLookupByLibrary.simpleMessage(
+      "恢复所有数据？现有配置、规则和设置可能被替换，且无法撤销。",
+    ),
     "restoreAllData": MessageLookupByLibrary.simpleMessage("恢复所有数据"),
-    "restoreConfirmTip": m26,
     "restoreException": MessageLookupByLibrary.simpleMessage("恢复异常"),
     "restoreFromFileDesc": MessageLookupByLibrary.simpleMessage("通过文件恢复数据"),
     "restoreFromWebDAVDesc": MessageLookupByLibrary.simpleMessage(
       "通过WebDAV恢复数据",
     ),
     "restoreOnlyConfig": MessageLookupByLibrary.simpleMessage("仅恢复配置文件"),
+    "restoreProfilesConfirmTip": MessageLookupByLibrary.simpleMessage(
+      "仅恢复配置？现有配置及相关规则可能被替换，且无法撤销。",
+    ),
     "restoreStrategy": MessageLookupByLibrary.simpleMessage("恢复策略"),
     "restoreStrategyCompatible": MessageLookupByLibrary.simpleMessage("兼容"),
     "restoreStrategyOverride": MessageLookupByLibrary.simpleMessage("覆盖"),
@@ -738,7 +741,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleSet": MessageLookupByLibrary.simpleMessage("规则集"),
     "ruleTarget": MessageLookupByLibrary.simpleMessage("规则目标"),
     "rules": MessageLookupByLibrary.simpleMessage("规则"),
-    "rulesCount": m27,
+    "rulesCount": m26,
     "save": MessageLookupByLibrary.simpleMessage("保存"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("是否保存更改？"),
     "script": MessageLookupByLibrary.simpleMessage("脚本"),
@@ -748,7 +751,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "scrollToSelected": MessageLookupByLibrary.simpleMessage("滚动到已选"),
     "search": MessageLookupByLibrary.simpleMessage("搜索"),
     "seconds": MessageLookupByLibrary.simpleMessage("秒"),
-    "secondsCount": m28,
+    "secondsCount": m27,
     "selectAll": MessageLookupByLibrary.simpleMessage("全选"),
     "selectMatchTarget": MessageLookupByLibrary.simpleMessage(
       "选择 MATCH-TARGET",
@@ -759,7 +762,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selectSplitStrategy": MessageLookupByLibrary.simpleMessage("请选择分流策略"),
     "selectSubRule": MessageLookupByLibrary.simpleMessage("请选择子规则"),
     "selected": MessageLookupByLibrary.simpleMessage("已选择"),
-    "selectedCountTitle": m29,
+    "selectedCountTitle": m28,
     "settings": MessageLookupByLibrary.simpleMessage("设置"),
     "show": MessageLookupByLibrary.simpleMessage("显示"),
     "showLess": MessageLookupByLibrary.simpleMessage("收起"),
@@ -850,7 +853,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("上传"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("通过URL获取配置文件"),
-    "urlTip": m30,
+    "urlTip": m29,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "usedTraffic": MessageLookupByLibrary.simpleMessage("已用流量"),
@@ -906,14 +909,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
       "导入 VPN 服务商提供的订阅链接。",
     ),
-    "vpnImportDiagnostic": m31,
+    "vpnImportDiagnostic": m30,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage("正在下载配置…"),
     "vpnImportFailed": MessageLookupByLibrary.simpleMessage(
       "无法导入配置。已保存的配置未被替换。请检查链接和网络连接后重试。",
     ),
     "vpnImportFinalizing": MessageLookupByLibrary.simpleMessage("正在完成配置更新…"),
     "vpnImportGeodata": MessageLookupByLibrary.simpleMessage("正在准备地理数据库…"),
-    "vpnImportProviders": m32,
+    "vpnImportProviders": m31,
     "vpnImportSaving": MessageLookupByLibrary.simpleMessage("正在校验并保存配置…"),
     "vpnImportTimedOut": MessageLookupByLibrary.simpleMessage(
       "配置下载超时。已保存的配置未被替换。请检查网络连接后重试。",
@@ -925,7 +928,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "请输入有效的 HTTP 或 HTTPS 订阅链接。",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("测试失败"),
-    "vpnLatencyMs": m33,
+    "vpnLatencyMs": m32,
     "vpnLatencyTesting": MessageLookupByLibrary.simpleMessage("测试中…"),
     "vpnLatencyTimeout": MessageLookupByLibrary.simpleMessage("超时"),
     "vpnLatencyUnreachable": MessageLookupByLibrary.simpleMessage("无法连接"),
@@ -982,7 +985,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnTip": MessageLookupByLibrary.simpleMessage("重启VPN后改变生效"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
-    "yearsAgo": m34,
+    "yearsAgo": m33,
     "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

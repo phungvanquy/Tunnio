@@ -686,5 +686,6 @@
   "pauseAutoScroll": "Pause auto-scroll",
   "resumeAutoScroll": "Resume auto-scroll",
   "connectionFailed": "Connection failed",
-  "restoreConfirmTip": "{strategy}: current data will be overwritten. This cannot be undone."
+  "restoreAllConfirmTip": "Restore all data? Existing profiles, rules, and settings may be replaced. This cannot be undone.",
+  "restoreProfilesConfirmTip": "Restore profiles only? Existing profiles and related rules may be replaced. This cannot be undone."
 }

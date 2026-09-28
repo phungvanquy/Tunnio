@@ -211,6 +211,66 @@ void main() {
     expect(rootBackCount, 0);
   });
 
+  testWidgets('search chrome and text follow a dark custom color scheme', (
+    tester,
+  ) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    globalState.container = container;
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: Colors.purple,
+          brightness: Brightness.dark,
+        ).copyWith(
+          surface: Colors.black,
+          surfaceContainerHigh: const Color(0xFF141414),
+          onSurface: Colors.white,
+          onSurfaceVariant: Colors.white70,
+        );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: ThemeData.dark().copyWith(
+            colorScheme: scheme,
+            textTheme: const TextTheme(
+              titleLarge: TextStyle(color: Colors.red),
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              hintStyle: TextStyle(color: Colors.red),
+            ),
+          ),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: AppLocalizations.delegate.supportedLocales,
+          home: CommonScaffold(
+            title: 'Search',
+            searchState: AppBarSearchState(onSearch: (_) {}),
+            body: const SizedBox(),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.search));
+    await tester.pumpAndSettle();
+
+    final theme = Theme.of(tester.element(find.byType(AppBar)));
+    expect(theme.appBarTheme.backgroundColor, scheme.surfaceContainerHigh);
+    expect(theme.appBarTheme.iconTheme?.color, scheme.onSurfaceVariant);
+    expect(theme.appBarTheme.titleTextStyle?.color, scheme.onSurface);
+    expect(
+      theme.inputDecorationTheme.hintStyle?.color,
+      scheme.onSurfaceVariant,
+    );
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).style?.color,
+      scheme.onSurface,
+    );
+  });
+
   testWidgets('inactive page scope exits the kept search layer', (
     tester,
   ) async {

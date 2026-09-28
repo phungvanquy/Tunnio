@@ -220,6 +220,14 @@ void main() {
       seedAccessControl(const AccessControlProps(enable: true));
       await pumpAccessView(tester);
 
+      expect(
+        tester
+            .widget<FloatingActionButton>(
+              find.byType(FloatingActionButton).first,
+            )
+            .tooltip,
+        'Select all',
+      );
       await tester.tap(find.byType(FloatingActionButton).first);
       await tester.pump();
       expect(
@@ -228,6 +236,14 @@ void main() {
       );
 
       await tester.pump(const Duration(milliseconds: 400));
+      expect(
+        tester
+            .widget<FloatingActionButton>(
+              find.byType(FloatingActionButton).first,
+            )
+            .tooltip,
+        'Deselect all',
+      );
       await tester.tap(find.byType(FloatingActionButton).first);
       await tester.pump();
       expect(container.read(accessControlStateProvider).currentList, isEmpty);

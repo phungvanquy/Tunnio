@@ -686,5 +686,6 @@
   "pauseAutoScroll": "自動スクロールを一時停止",
   "resumeAutoScroll": "自動スクロールを再開",
   "connectionFailed": "接続に失敗しました",
-  "restoreConfirmTip": "{strategy}：現在のデータは上書きされ、元に戻せません。"
+  "restoreAllConfirmTip": "すべてのデータを復元しますか？既存のプロファイル、ルール、設定が置き換えられる場合があります。この操作は元に戻せません。",
+  "restoreProfilesConfirmTip": "プロファイルのみを復元しますか？既存のプロファイルと関連するルールが置き換えられる場合があります。この操作は元に戻せません。"
 }

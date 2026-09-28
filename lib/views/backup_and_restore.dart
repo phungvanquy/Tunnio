@@ -21,7 +21,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BackupAndRestore extends ConsumerStatefulWidget {
-  const BackupAndRestore({super.key});
+  const BackupAndRestore({super.key, @visibleForTesting this.connection});
+
+  final DAVConnectionController? connection;
 
   @override
   ConsumerState<BackupAndRestore> createState() => _BackupAndRestoreState();
@@ -29,7 +31,7 @@ class BackupAndRestore extends ConsumerStatefulWidget {
 
 class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
     with UniqueKeyStateMixin {
-  final _davConnection = DAVConnectionController();
+  late final _davConnection = widget.connection ?? DAVConnectionController();
 
   @override
   void initState() {
@@ -108,14 +110,10 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
       child: const RestoreOptionsDialog(),
     );
     if (restoreOption == null || !mounted) return;
-    final strategyLabel = restoreOption == RestoreOption.all
-        ? context.appLocalizations.restoreAllData
-        : context.appLocalizations.restoreOnlyConfig;
-    final confirm = await dialogs.showMessage(
-      message: TextSpan(
-        text: context.appLocalizations.restoreConfirmTip(strategyLabel),
-      ),
-    );
+    final message = restoreOption == RestoreOption.all
+        ? context.appLocalizations.restoreAllConfirmTip
+        : context.appLocalizations.restoreProfilesConfirmTip;
+    final confirm = await dialogs.showMessage(message: TextSpan(text: message));
     if (confirm != true || !mounted) return;
     unawaited(_restoreOnWebDAV(restoreOption));
   }
@@ -149,16 +147,13 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
   Future<void> _restoreOnLocal(RestoreOption option) async {
     final backupAction = ref.read(backupActionProvider.notifier);
     final appLocalizations = context.appLocalizations;
-    final strategyLabel = option == RestoreOption.all
-        ? appLocalizations.restoreAllData
-        : appLocalizations.restoreOnlyConfig;
-    final confirm = await dialogs.showMessage(
-      message: TextSpan(
-        text: appLocalizations.restoreConfirmTip(strategyLabel),
-      ),
-    );
+    final message = option == RestoreOption.all
+        ? appLocalizations.restoreAllConfirmTip
+        : appLocalizations.restoreProfilesConfirmTip;
+    final confirm = await dialogs.showMessage(message: TextSpan(text: message));
     if (confirm != true || !mounted) return;
     final file = await picker.pickerFile();
+    if (!mounted) return;
     final path = file?.path;
     if (path == null) return;
     await File(path).safeCopy(await appPath.backupFilePath);

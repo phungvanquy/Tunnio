@@ -2,7 +2,7 @@
 
 ## 1. Localization
 
-- [x] 1.1 Add `vpnNotReady`, `closeConnectionsTip`, `pauseAutoScroll`, `resumeAutoScroll`, `connectionFailed`, `restoreConfirmTip` to all four ARBs and regenerate; verify generation succeeds.
+- [x] 1.1 Add `vpnNotReady`, `closeConnectionsTip`, `pauseAutoScroll`, `resumeAutoScroll`, `connectionFailed`, and strategy-specific restore confirmations to all four ARBs and regenerate; verify generation succeeds.
 
 ## 2. Destructive confirmations
 
@@ -22,4 +22,4 @@
 
 ## 5. Verification
 
-- [ ] 5.1 `dart format`, `flutter analyze --no-fatal-infos`, affected `flutter test` suites, `openspec validate`.
+- [x] 5.1 `dart format`, `flutter analyze --no-fatal-infos`, affected `flutter test` suites, `openspec validate`.

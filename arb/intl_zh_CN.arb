@@ -686,5 +686,6 @@
   "pauseAutoScroll": "暂停自动滚动",
   "resumeAutoScroll": "恢复自动滚动",
   "connectionFailed": "连接失败",
-  "restoreConfirmTip": "{strategy}：当前数据将被覆盖，且无法撤销。"
+  "restoreAllConfirmTip": "恢复所有数据？现有配置、规则和设置可能被替换，且无法撤销。",
+  "restoreProfilesConfirmTip": "仅恢复配置？现有配置及相关规则可能被替换，且无法撤销。"
 }

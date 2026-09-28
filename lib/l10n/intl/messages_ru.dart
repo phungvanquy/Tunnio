@@ -84,28 +84,25 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m25(count) => "${count} прокси";
 
-  static String m26(strategy) =>
-      "${strategy}: текущие данные будут перезаписаны. Это действие нельзя отменить.";
-
-  static String m27(count) =>
+  static String m26(count) =>
       "${Intl.plural(count, one: '${count} правило', few: '${count} правила', many: '${count} правил', other: '${count} правила')}";
 
-  static String m28(count) =>
+  static String m27(count) =>
       "${Intl.plural(count, one: '${count} секунда', few: '${count} секунды', many: '${count} секунд', other: '${count} секунды')}";
 
-  static String m29(count) => "Выбрано: ${count}";
+  static String m28(count) => "Выбрано: ${count}";
 
-  static String m30(label) => "Значение «${label}» должно быть URL";
+  static String m29(label) => "Значение «${label}» должно быть URL";
 
-  static String m31(details) =>
+  static String m30(details) =>
       "Диагностический код (можно безопасно отправить): ${details}";
 
-  static String m32(completed, total) =>
+  static String m31(completed, total) =>
       "Подготовка списков серверов и правил… ${completed}/${total}";
 
-  static String m33(value) => "${value} мс";
+  static String m32(value) => "${value} мс";
 
-  static String m34(count) =>
+  static String m33(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -920,10 +917,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Вы уверены, что хотите перезапустить ядро?",
     ),
     "restore": MessageLookupByLibrary.simpleMessage("Восстановить"),
+    "restoreAllConfirmTip": MessageLookupByLibrary.simpleMessage(
+      "Восстановить все данные? Существующие профили, правила и настройки могут быть заменены. Это действие нельзя отменить.",
+    ),
     "restoreAllData": MessageLookupByLibrary.simpleMessage(
       "Восстановить все данные",
     ),
-    "restoreConfirmTip": m26,
     "restoreException": MessageLookupByLibrary.simpleMessage(
       "Ошибка восстановления",
     ),
@@ -935,6 +934,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "restoreOnlyConfig": MessageLookupByLibrary.simpleMessage(
       "Восстановить только профили",
+    ),
+    "restoreProfilesConfirmTip": MessageLookupByLibrary.simpleMessage(
+      "Восстановить только профили? Существующие профили и связанные правила могут быть заменены. Это действие нельзя отменить.",
     ),
     "restoreStrategy": MessageLookupByLibrary.simpleMessage(
       "Стратегия восстановления",
@@ -1080,7 +1082,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleSet": MessageLookupByLibrary.simpleMessage("Набор правил"),
     "ruleTarget": MessageLookupByLibrary.simpleMessage("Цель правила"),
     "rules": MessageLookupByLibrary.simpleMessage("Правила"),
-    "rulesCount": m27,
+    "rulesCount": m26,
     "save": MessageLookupByLibrary.simpleMessage("Сохранить"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("Сохранить изменения?"),
     "script": MessageLookupByLibrary.simpleMessage("Скрипт"),
@@ -1092,7 +1094,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "search": MessageLookupByLibrary.simpleMessage("Поиск"),
     "seconds": MessageLookupByLibrary.simpleMessage("секунд"),
-    "secondsCount": m28,
+    "secondsCount": m27,
     "selectAll": MessageLookupByLibrary.simpleMessage("Выбрать всё"),
     "selectMatchTarget": MessageLookupByLibrary.simpleMessage(
       "Выбрать MATCH-TARGET",
@@ -1111,7 +1113,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Выберите подправило",
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Выбрано"),
-    "selectedCountTitle": m29,
+    "selectedCountTitle": m28,
     "settings": MessageLookupByLibrary.simpleMessage("Настройки"),
     "show": MessageLookupByLibrary.simpleMessage("Показать"),
     "showLess": MessageLookupByLibrary.simpleMessage("Свернуть"),
@@ -1236,7 +1238,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("Отдача"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("Получить профиль по URL"),
-    "urlTip": m30,
+    "urlTip": m29,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системный hosts",
@@ -1310,7 +1312,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
       "Импортируйте ссылку на подписку от вашего VPN-провайдера.",
     ),
-    "vpnImportDiagnostic": m31,
+    "vpnImportDiagnostic": m30,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage(
       "Загрузка конфигурации…",
     ),
@@ -1323,7 +1325,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportGeodata": MessageLookupByLibrary.simpleMessage(
       "Подготовка географических баз данных…",
     ),
-    "vpnImportProviders": m32,
+    "vpnImportProviders": m31,
     "vpnImportSaving": MessageLookupByLibrary.simpleMessage(
       "Проверка и сохранение конфигурации…",
     ),
@@ -1341,7 +1343,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Введите корректную ссылку на подписку HTTP или HTTPS.",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("Ошибка проверки"),
-    "vpnLatencyMs": m33,
+    "vpnLatencyMs": m32,
     "vpnLatencyTesting": MessageLookupByLibrary.simpleMessage("Проверка…"),
     "vpnLatencyTimeout": MessageLookupByLibrary.simpleMessage("Время истекло"),
     "vpnLatencyUnreachable": MessageLookupByLibrary.simpleMessage("Недоступен"),
@@ -1426,7 +1428,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "whitelistMode": MessageLookupByLibrary.simpleMessage(
       "Режим белого списка",
     ),
-    "yearsAgo": m34,
+    "yearsAgo": m33,
     "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
   };
 }

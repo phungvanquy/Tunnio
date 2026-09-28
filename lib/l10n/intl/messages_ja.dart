@@ -75,24 +75,22 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m25(count) => "プロキシ ${count} 件";
 
-  static String m26(strategy) => "${strategy}：現在のデータは上書きされ、元に戻せません。";
+  static String m26(count) => "ルール ${count} 件";
 
-  static String m27(count) => "ルール ${count} 件";
+  static String m27(count) => "${count} 秒";
 
-  static String m28(count) => "${count} 秒";
+  static String m28(count) => "${count} 件選択中";
 
-  static String m29(count) => "${count} 件選択中";
+  static String m29(label) => "${label}はURLである必要があります";
 
-  static String m30(label) => "${label}はURLである必要があります";
+  static String m30(details) => "診断コード（共有しても安全です）：${details}";
 
-  static String m31(details) => "診断コード（共有しても安全です）：${details}";
-
-  static String m32(completed, total) =>
+  static String m31(completed, total) =>
       "サーバーとルールの一覧を準備中… ${completed}/${total}";
 
-  static String m33(value) => "${value} ミリ秒";
+  static String m32(value) => "${value} ミリ秒";
 
-  static String m34(count) => "${count} 年前";
+  static String m33(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -731,8 +729,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "restart": MessageLookupByLibrary.simpleMessage("再起動"),
     "restartCoreTip": MessageLookupByLibrary.simpleMessage("コアを再起動してもよろしいですか？"),
     "restore": MessageLookupByLibrary.simpleMessage("復元"),
+    "restoreAllConfirmTip": MessageLookupByLibrary.simpleMessage(
+      "すべてのデータを復元しますか？既存のプロファイル、ルール、設定が置き換えられる場合があります。この操作は元に戻せません。",
+    ),
     "restoreAllData": MessageLookupByLibrary.simpleMessage("すべてのデータを復元"),
-    "restoreConfirmTip": m26,
     "restoreException": MessageLookupByLibrary.simpleMessage("復元エラー"),
     "restoreFromFileDesc": MessageLookupByLibrary.simpleMessage(
       "ファイルからデータを復元します",
@@ -741,6 +741,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "WebDAVからデータを復元します",
     ),
     "restoreOnlyConfig": MessageLookupByLibrary.simpleMessage("プロファイルのみ復元"),
+    "restoreProfilesConfirmTip": MessageLookupByLibrary.simpleMessage(
+      "プロファイルのみを復元しますか？既存のプロファイルと関連するルールが置き換えられる場合があります。この操作は元に戻せません。",
+    ),
     "restoreStrategy": MessageLookupByLibrary.simpleMessage("復元方式"),
     "restoreStrategyCompatible": MessageLookupByLibrary.simpleMessage("互換"),
     "restoreStrategyOverride": MessageLookupByLibrary.simpleMessage("上書き"),
@@ -861,7 +864,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleSet": MessageLookupByLibrary.simpleMessage("ルールセット"),
     "ruleTarget": MessageLookupByLibrary.simpleMessage("ルールターゲット"),
     "rules": MessageLookupByLibrary.simpleMessage("ルール"),
-    "rulesCount": m27,
+    "rulesCount": m26,
     "save": MessageLookupByLibrary.simpleMessage("保存"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("変更を保存しますか？"),
     "script": MessageLookupByLibrary.simpleMessage("スクリプト"),
@@ -871,7 +874,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "scrollToSelected": MessageLookupByLibrary.simpleMessage("選択項目へスクロール"),
     "search": MessageLookupByLibrary.simpleMessage("検索"),
     "seconds": MessageLookupByLibrary.simpleMessage("秒"),
-    "secondsCount": m28,
+    "secondsCount": m27,
     "selectAll": MessageLookupByLibrary.simpleMessage("すべて選択"),
     "selectMatchTarget": MessageLookupByLibrary.simpleMessage(
       "MATCH-TARGET を選択",
@@ -886,7 +889,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "selectSubRule": MessageLookupByLibrary.simpleMessage("サブルールを選択してください"),
     "selected": MessageLookupByLibrary.simpleMessage("選択済み"),
-    "selectedCountTitle": m29,
+    "selectedCountTitle": m28,
     "settings": MessageLookupByLibrary.simpleMessage("設定"),
     "show": MessageLookupByLibrary.simpleMessage("表示"),
     "showLess": MessageLookupByLibrary.simpleMessage("折りたたむ"),
@@ -983,7 +986,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("URLからプロファイルを取得します"),
-    "urlTip": m30,
+    "urlTip": m29,
     "useHosts": MessageLookupByLibrary.simpleMessage("Hostsを使用"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("システムのHostsを使用"),
     "usedTraffic": MessageLookupByLibrary.simpleMessage("使用済みトラフィック"),
@@ -1041,14 +1044,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
       "VPN プロバイダーのサブスクリプション URL を読み込んでください。",
     ),
-    "vpnImportDiagnostic": m31,
+    "vpnImportDiagnostic": m30,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage("設定をダウンロード中…"),
     "vpnImportFailed": MessageLookupByLibrary.simpleMessage(
       "設定をインポートできませんでした。保存済みの設定は置き換えられていません。URL と接続を確認して再試行してください。",
     ),
     "vpnImportFinalizing": MessageLookupByLibrary.simpleMessage("設定の更新を完了中…"),
     "vpnImportGeodata": MessageLookupByLibrary.simpleMessage("地理データベースを準備中…"),
-    "vpnImportProviders": m32,
+    "vpnImportProviders": m31,
     "vpnImportSaving": MessageLookupByLibrary.simpleMessage("設定を検証して保存中…"),
     "vpnImportTimedOut": MessageLookupByLibrary.simpleMessage(
       "設定のダウンロードがタイムアウトしました。保存済みの設定は変更されていません。接続を確認して再試行してください。",
@@ -1060,7 +1063,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "有効な HTTP または HTTPS のサブスクリプション URL を入力してください。",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("テスト失敗"),
-    "vpnLatencyMs": m33,
+    "vpnLatencyMs": m32,
     "vpnLatencyTesting": MessageLookupByLibrary.simpleMessage("テスト中…"),
     "vpnLatencyTimeout": MessageLookupByLibrary.simpleMessage("タイムアウト"),
     "vpnLatencyUnreachable": MessageLookupByLibrary.simpleMessage("到達できません"),
@@ -1125,7 +1128,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnTip": MessageLookupByLibrary.simpleMessage("変更はVPNの再起動後に有効になります"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
-    "yearsAgo": m34,
+    "yearsAgo": m33,
     "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }

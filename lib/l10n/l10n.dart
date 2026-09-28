@@ -5775,13 +5775,23 @@ class AppLocalizations {
     );
   }
 
-  /// `{strategy}: current data will be overwritten. This cannot be undone.`
-  String restoreConfirmTip(Object strategy) {
+  /// `Restore all data? Existing profiles, rules, and settings may be replaced. This cannot be undone.`
+  String get restoreAllConfirmTip {
     return Intl.message(
-      '$strategy: current data will be overwritten. This cannot be undone.',
-      name: 'restoreConfirmTip',
+      'Restore all data? Existing profiles, rules, and settings may be replaced. This cannot be undone.',
+      name: 'restoreAllConfirmTip',
       desc: '',
-      args: [strategy],
+      args: [],
+    );
+  }
+
+  /// `Restore profiles only? Existing profiles and related rules may be replaced. This cannot be undone.`
+  String get restoreProfilesConfirmTip {
+    return Intl.message(
+      'Restore profiles only? Existing profiles and related rules may be replaced. This cannot be undone.',
+      name: 'restoreProfilesConfirmTip',
+      desc: '',
+      args: [],
     );
   }
 }
