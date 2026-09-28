@@ -211,11 +211,24 @@ void main() {
       expect(find.widgetWithText(TextButton, 'Delete'), findsOneWidget);
     });
 
-    testWidgets('delete clears the stored binding', (tester) async {
+    testWidgets('delete clears the stored binding only after confirmation', (
+      tester,
+    ) async {
       container.read(davSettingProvider.notifier).update((_) => _existing);
       await pumpDialog(tester, const WebDAVFormDialog(dav: _existing));
 
       await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+      await tester.pumpAndSettle();
+
+      expect(container.read(davSettingProvider), _existing);
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      expect(container.read(davSettingProvider), _existing);
+      expect(find.byType(WebDAVFormDialog), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Confirm'));
       await tester.pumpAndSettle();
 
       expect(container.read(davSettingProvider), isNull);

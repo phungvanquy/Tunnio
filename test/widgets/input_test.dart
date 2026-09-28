@@ -366,7 +366,22 @@ void main() {
     await tester.tap(find.text('Select all'));
     await tester.pump();
     await tester.tap(find.byIcon(Icons.delete));
-    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.text('No data'), findsNothing);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+    for (final item in ['a', 'b', 'd', 'x', 'y']) {
+      expect(find.text(item), findsNWidgets(3));
+    }
+    expect(
+      tester.widgetList<Checkbox>(find.byType(Checkbox)),
+      everyElement(isA<Checkbox>().having((box) => box.value, 'value', isTrue)),
+    );
+
+    await tester.tap(find.byIcon(Icons.delete));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Confirm'));
+    await tester.pumpAndSettle();
     expect(find.text('No data'), findsOneWidget);
   });
 
@@ -418,7 +433,25 @@ void main() {
     await tester.tap(find.text('Select all'));
     await tester.pump();
     await tester.tap(find.byIcon(Icons.delete));
-    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.text('No data'), findsNothing);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+    for (final key in ['a', 'b', 'c']) {
+      expect(find.text(key), findsNWidgets(2));
+    }
+    for (final value in ['1', '2', '3']) {
+      expect(find.text(value), findsOneWidget);
+    }
+    expect(
+      tester.widgetList<Checkbox>(find.byType(Checkbox)),
+      everyElement(isA<Checkbox>().having((box) => box.value, 'value', isTrue)),
+    );
+
+    await tester.tap(find.byIcon(Icons.delete));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Confirm'));
+    await tester.pumpAndSettle();
     expect(find.text('No data'), findsOneWidget);
   });
 

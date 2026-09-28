@@ -14,15 +14,14 @@ void main() {
   const tagPush =
       "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')";
 
-  test('main pushes and manual runs build without enabling releases', () {
+  test('all branch pushes and manual runs build without enabling releases', () {
     final events = workflow['on'] as YamlMap;
     expect(events.containsKey('workflow_dispatch'), isTrue);
     expect(events['push']['branches'], contains('**'));
     expect(
       build['if'],
       "github.event_name == 'workflow_dispatch' || "
-      "(github.event_name == 'push' && (github.ref == 'refs/heads/main' || "
-      "startsWith(github.ref, 'refs/tags/v')))",
+      "github.event_name == 'push'",
     );
     expect(release['if'], tagPush);
     expect(workflow['permissions']['contents'], 'read');
