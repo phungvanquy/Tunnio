@@ -4,16 +4,51 @@
     {
       "version": "1.0.0",
       "tag": "v1.0.0",
-      "date": "2026-09-25",
+      "date": "2026-09-29",
       "prerelease": false,
       "groups": [
         {
           "type": "feat",
           "entries": [
             {
+              "id": "32eca35",
+              "scope": "ui",
+              "text": "Require confirmation for destructive actions, improve accessibility"
+            },
+            {
+              "id": "f6528dd",
+              "scope": "ui",
+              "text": "Clearer VPN controls and server list with color-coded latency"
+            },
+            {
               "id": "a562b3c",
               "scope": "branding",
               "text": "Tunnio packaging and update links with existing-install compatibility"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "c91226d",
+              "scope": "l10n",
+              "text": "Format generated localization files"
+            },
+            {
+              "id": "be01aed",
+              "scope": "ui",
+              "text": "Fix missing numbers in Android server names and the current-node label"
+            },
+            {
+              "id": "4f7a0be",
+              "scope": "ui",
+              "text": "Show complete server information and preserve subscription icons on Android"
+            },
+            {
+              "id": "18ecd68",
+              "scope": "ui",
+              "text": "Fix Android server row clipping and improve server name and latency readability"
             }
           ]
         }

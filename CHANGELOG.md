@@ -1,10 +1,19 @@
 # Changelog
 
-## v1.0.0 (2026-09-25)
+## v1.0.0 (2026-09-29)
 
 **Features**
 
+- **ui** Require confirmation for destructive actions, improve accessibility (32eca35)
+- **ui** Clearer VPN controls and server list with color-coded latency (f6528dd)
 - **branding** Tunnio packaging and update links with existing-install compatibility (a562b3c)
+
+**Bug Fixes**
+
+- **l10n** Format generated localization files (c91226d)
+- **ui** Fix missing numbers in Android server names and the current-node label (be01aed)
+- **ui** Show complete server information and preserve subscription icons on Android (4f7a0be)
+- **ui** Fix Android server row clipping and improve server name and latency readability (18ecd68)
 
 <!-- changelog:frozen -->
 <!-- Entries below predate the structured pipeline. Their wording is kept as written; only the heading and list style were normalized. -->
