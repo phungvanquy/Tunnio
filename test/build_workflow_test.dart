@@ -76,6 +76,39 @@ void main() {
     expect(release['needs'], ['build']);
   });
 
+  test('stable releases publish the structured changelog', () {
+    final dartSteps = (jobs['dart'] as YamlMap)['steps'] as YamlList;
+    final releaseSteps = release['steps'] as YamlList;
+    final render = dartSteps.firstWhere(
+      (step) => step['name'] == 'Render stable release notes',
+    );
+    final upload = dartSteps.firstWhere(
+      (step) => step['name'] == 'Upload stable release notes',
+    );
+    final download = releaseSteps.firstWhere(
+      (step) => step['name'] == 'Download stable release notes',
+    );
+    final publish = releaseSteps.firstWhere(
+      (step) => step['name'] == 'Release stable',
+    );
+
+    expect(render['if'], "env.IS_STABLE == 'true'");
+    expect(
+      render['run'],
+      contains(r'render release --tag "$GITHUB_REF_NAME" --out release.md'),
+    );
+    expect(upload['if'], render['if']);
+    expect(upload['with']['name'], 'release-notes');
+    expect(upload['with']['path'], 'release.md');
+    expect(download['if'], render['if']);
+    expect(download['with']['name'], 'release-notes');
+    expect(download['with']['path'], './notes');
+    expect(publish['if'], render['if']);
+    expect(publish['with']['body_path'], './notes/release.md');
+    expect(publish['with']['files'], './dist/*');
+    expect(publish['with']['prerelease'], isFalse);
+  });
+
   test('test builds use native assets and do not consume release signing', () {
     final steps = build['steps'] as YamlList;
     final checkout = steps.firstWhere((step) => step['name'] == 'Checkout');

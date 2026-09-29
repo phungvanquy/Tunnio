@@ -67,6 +67,18 @@ jobs:
       - name: Check coverage
         run: dart run tool/check_coverage.dart coverage/lcov.info 75
 
+      - name: Render stable release notes
+        if: env.IS_STABLE == 'true'
+        run: dart run tool/changelog.dart render release --tag "$GITHUB_REF_NAME" --out release.md
+
+      - name: Upload stable release notes
+        if: env.IS_STABLE == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release.md
+          if-no-files-found: error
+
   plugins:
     name: Plugins
     runs-on: ubuntu-latest
@@ -469,9 +481,25 @@ jobs:
           cd ./dist
           sha256sum ./* > SHA256SUMS
 
-      - name: Release
+      - name: Download stable release notes
+        if: env.IS_STABLE == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: ./notes
+
+      - name: Release stable
+        if: env.IS_STABLE == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/*
+          body_path: ./notes/release.md
+          prerelease: false
+
+      - name: Release prerelease
+        if: env.IS_STABLE != 'true'
         uses: softprops/action-gh-release@v2
         with:
           files: ./dist/*
           generate_release_notes: true
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: true
