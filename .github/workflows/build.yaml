@@ -345,6 +345,10 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           if [[ -z "$KEYSTORE" ]]; then
+            if [[ "$IS_STABLE" == "true" ]]; then
+              echo "Stable Android releases require KEYSTORE and signing credentials." >&2
+              exit 1
+            fi
             echo "Android signing secrets are not configured; using the debug signing fallback."
             exit 0
           fi

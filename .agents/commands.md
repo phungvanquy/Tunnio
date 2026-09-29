@@ -276,6 +276,10 @@ the installer. Tagged releases retain the full architecture/package matrix.
 Test builds use the `pre` application
 environment and Android debug signing; backing up an installed release before
 testing avoids data loss if its different signing key requires a reinstall.
+Stable Android tags require the `KEYSTORE` (base64-encoded keystore), `KEY_ALIAS`,
+`STORE_PASSWORD`, and `KEY_PASSWORD` GitHub Actions secrets. CI fails without
+them, because debug-signed APKs use the `.dev` application ID and cannot upgrade
+an installed release.
 `v*` tag pushes also build Linux AMD64 and publish a release/prerelease. Pull
 requests trigger nothing.
 
