@@ -83,6 +83,10 @@ Future<void> generateBrandIcons(img.Image logo, Directory root) async {
   }
 
   final background = img.ColorRgb8(7, 24, 42);
+  await writePng(
+    'android/app/src/main/ic_launcher-playstore.png',
+    brandIcon(logo, 512),
+  );
   await writeIco('windows/runner/resources/app_icon.ico', icoSizes, null);
   await writeIco('assets/images/icon.ico', icoSizes, null);
   for (final size in [16, 32, 64, 128, 256, 512, 1024]) {
