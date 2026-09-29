@@ -6,16 +6,11 @@
 
 ## Tunnio
 
-Tunnio is a fork of [FlClash](https://github.com/chen08209/FlClash), using the ITMOTunnio logo.
-The Core is developed in [Tunnio-core](https://github.com/phungvanquy/Tunnio-core). Test builds are available from [GitHub Actions](https://github.com/phungvanquy/Tunnio/actions).
+Tunnio is an open-source, ad-free proxy client based on ClashMeta. Its Core is maintained in [Tunnio-core](https://github.com/phungvanquy/Tunnio-core). Test builds are available from [GitHub Actions](https://github.com/phungvanquy/Tunnio/actions).
 
 [![Downloads](https://img.shields.io/github/downloads/phungvanquy/Tunnio/total?style=flat-square&logo=github)](https://github.com/phungvanquy/Tunnio/releases/)[![Last Version](https://img.shields.io/github/release/phungvanquy/Tunnio/all.svg?style=flat-square)](https://github.com/phungvanquy/Tunnio/releases/)[![License](https://img.shields.io/github/license/phungvanquy/Tunnio?style=flat-square)](LICENSE)
 
-A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.
-
-<p align="center">
-    <img alt="Tunnio" src="assets/images/icon.png" width="128">
-</p>
+A simple proxy client for Android, Windows, macOS, and Linux.
 
 ## Features
 

@@ -6,15 +6,11 @@
 
 ## Tunnio
 
-Tunnio 基于 [FlClash](https://github.com/chen08209/FlClash)，使用 ITMOTunnio 标志。Core 位于 [Tunnio-core](https://github.com/phungvanquy/Tunnio-core)。
+Tunnio 是基于 ClashMeta 的开源无广告代理客户端。Core 在 [Tunnio-core](https://github.com/phungvanquy/Tunnio-core) 维护。
 
 [![Downloads](https://img.shields.io/github/downloads/phungvanquy/Tunnio/total?style=flat-square&logo=github)](https://github.com/phungvanquy/Tunnio/releases/)[![Last Version](https://img.shields.io/github/release/phungvanquy/Tunnio/all.svg?style=flat-square)](https://github.com/phungvanquy/Tunnio/releases/)[![License](https://img.shields.io/github/license/phungvanquy/Tunnio?style=flat-square)](LICENSE)
 
-基于ClashMeta的多平台代理客户端，简单易用，开源无广告。
-
-<p align="center">
-    <img alt="Tunnio" src="assets/images/icon.png" width="128">
-</p>
+支持 Android、Windows、macOS 和 Linux，简单易用。
 
 ## Features
 

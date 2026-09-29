@@ -1,6 +1,6 @@
 # Tunnio VPN setup and recovery
 
-Tunnio uses the rabbit-and-carrot rocket artwork for its launcher, desktop, notification, and tray icons. Installers, downloads, and desktop executables use Tunnio names. Existing app IDs, saved settings, Linux package IDs, Windows installer identity, auto-start registration, legacy URI schemes, and the WebDAV `/FlClash` backup folder are retained for upgrades. The `tunnio://install-config` scheme is supported alongside the existing schemes. Upgrade with the same signing identity to retain application data.
+Installers, downloads, and desktop executables use Tunnio names. Existing app IDs, saved settings, Linux package IDs, Windows installer identity, auto-start registration, legacy URI schemes, and the existing WebDAV backup folder are retained for upgrades. The `tunnio://install-config` scheme is supported alongside the existing schemes. Upgrade with the same signing identity to retain application data.
 
 ## Import, select, connect
 

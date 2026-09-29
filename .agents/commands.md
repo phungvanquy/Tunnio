@@ -100,7 +100,7 @@ dart run tool/generate_status_icons.dart
 It writes Android launcher densities, padded adaptive/themed layers, notification artwork and the TV banner;
 macOS AppIcon sizes; Windows app/installer ICOs; and tray PNGs (`2.0x/`–`4.0x/`) and ICOs.
 Obsolete Android launcher WebPs are removed to avoid duplicate resource names. Tray variants retain gray,
-blue (proxy), and green (TUN) states; monochrome assets extract the light artwork from the dark ITMOTunnio logo.
+blue (proxy), and green (TUN) states; monochrome assets extract the light artwork from the dark source icon.
 `pubspec.yaml` declares platform-specific tray directories so each build only bundles its own format.
 
 ## Testing
