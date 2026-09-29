@@ -12,6 +12,10 @@ Tunnio is an open-source, ad-free proxy client based on ClashMeta. Its Core is m
 
 A simple proxy client for Android, Windows, macOS, and Linux.
 
+<p align="center">
+    <img alt="Tunnio" src="assets/images/icon.png" width="128">
+</p>
+
 ## Features
 
 ✈️ Multi-platform: Android, Windows, macOS and Linux

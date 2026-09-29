@@ -12,6 +12,10 @@ Tunnio 是基于 ClashMeta 的开源无广告代理客户端。Core 在 [Tunnio-
 
 支持 Android、Windows、macOS 和 Linux，简单易用。
 
+<p align="center">
+    <img alt="Tunnio" src="assets/images/icon.png" width="128">
+</p>
+
 ## Features
 
 ✈️ 多平台: Android, Windows, macOS and Linux
