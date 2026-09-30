@@ -61,6 +61,7 @@ void main() {
   late Profile? active;
   late List<int> previousRuntime;
   late VpnResourceFetch fetch;
+  late String Function(String) resolveUrl;
   late Future<void> Function(VpnPreparedCandidate) activate;
   var failRestore = false;
   var failPublish = false;
@@ -92,6 +93,7 @@ void main() {
       },
     );
     fetch = (_, _, _) async => VpnDownload(utf8.encode(body));
+    resolveUrl = (url) => url;
     var handle = 0;
     final stager = VpnCandidateStager(
       store: store,
@@ -151,6 +153,7 @@ void main() {
       overrides: (_, raw, {ownedData}) async => raw,
       testUrl: () => 'https://example.test/check',
       maintenanceFailure: (error, _) => maintenance.add(error),
+      resolveUrl: (url) => resolveUrl(url),
     );
   });
 
@@ -194,6 +197,37 @@ void main() {
     expect(result.phase, VpnImportPhase.download);
     await expectPreserved();
   });
+
+  test(
+    'encrypted link remains saved while import and refresh fetch plaintext',
+    () async {
+      const token = 'tunnio-rsa:QUJDRA';
+      const plain = 'https://example.test/hidden?token=private';
+      final fetched = <String>[];
+      resolveUrl = (url) {
+        expect(url, token);
+        return plain;
+      };
+      fetch = (url, _, _) async {
+        fetched.add(url);
+        return VpnDownload(utf8.encode(body));
+      };
+      final imported = (await coordinator.submit(
+        VpnImportRequest(profile: incoming.copyWith(url: token)),
+      )).profile!;
+      expect(imported.url, token);
+      final refreshed = await coordinator.submit(
+        VpnImportRequest(
+          profile: imported,
+          refreshRevision: imported.snapshot.revision,
+          expectedProfile: imported,
+        ),
+      );
+      expect(refreshed.outcome, VpnImportOutcome.success);
+      expect(refreshed.profile!.url, token);
+      expect(fetched, [plain, plain]);
+    },
+  );
 
   test(
     'refresh retains missing usage metadata but a changed URL clears it',

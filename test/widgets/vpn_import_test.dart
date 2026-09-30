@@ -129,6 +129,20 @@ void main() {
     expect(find.byType(LinearProgressIndicator), findsNothing);
   });
 
+  testWidgets('encrypted link is forwarded unchanged for import', (
+    tester,
+  ) async {
+    await pumpPanel(tester);
+    await tester.enterText(find.byType(TextField), 'tunnio-rsa:QUJDRA');
+    await tester.tap(find.text(currentAppLocalizations.import));
+    await tester.pump();
+    expect(action.urls, ['tunnio-rsa:QUJDRA']);
+    action.pending.single.complete(
+      const VpnImportResult(VpnImportOutcome.success),
+    );
+    await tester.pumpAndSettle();
+  });
+
   testWidgets(
     'failure keeps entered URL and permits retry without leaking errors',
     (tester) async {

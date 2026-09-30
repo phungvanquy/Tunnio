@@ -124,6 +124,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(find.text(currentAppLocalizations.edit), findsNothing);
+      expect(find.text(currentAppLocalizations.exportFile), findsNothing);
+      expect(find.text(currentAppLocalizations.vpnCustomRouting), findsNothing);
+      expect(find.text(currentAppLocalizations.override), findsNothing);
       await tester.tap(find.text(currentAppLocalizations.update));
       await tester.pump();
       action.progress?.call(const VpnImportProgress(VpnImportStep.geodata));

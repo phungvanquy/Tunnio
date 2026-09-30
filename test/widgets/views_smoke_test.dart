@@ -104,9 +104,6 @@ void main() {
 
   final toolDestinations = <String, Type>{
     'Theme': ThemeView,
-    'Backup and restore': BackupAndRestore,
-    'Basic configuration': ConfigView,
-    'Advanced configuration': AdvancedConfigView,
     'Application': ApplicationSettingView,
   };
 
@@ -147,6 +144,40 @@ void main() {
       expect(tester.takeException(), null);
     });
   }
+
+  testWidgets('tools keep only basic settings destinations', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = ProviderContainer(
+      overrides: [profilesProvider.overrideWith(TestProfiles.new)],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(child: ToolsView()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Theme'), findsOneWidget);
+    expect(find.text('Application'), findsOneWidget);
+    for (final hidden in [
+      'Backup and restore',
+      'Basic configuration',
+      'Advanced configuration',
+      'Requests',
+      'Connections',
+      'Resources',
+      'Logs',
+    ]) {
+      expect(find.text(hidden), findsNothing);
+    }
+  });
 
   testWidgets('user agent dialog applies a preset', (tester) async {
     tester.view.physicalSize = const Size(1000, 800);

@@ -10,6 +10,7 @@ import 'profile_store.dart';
 import 'vpn_intake.dart';
 import 'vpn_import_progress.dart';
 import 'vpn_staging.dart';
+import 'vpn_subscription_url.dart';
 
 enum VpnImportOutcome { success, cancelled, failed, recoveryRequired }
 
@@ -125,9 +126,11 @@ class VpnImportCoordinator {
     required this.overrides,
     required this.testUrl,
     required this.maintenanceFailure,
+    this.resolveUrl = VpnSubscriptionUrl.resolve,
   });
 
   final SingleProfileRepository repository;
+  final String Function(String) resolveUrl;
   final ProfileGenerationStore store;
   final VpnCandidateStager stager;
   final VpnCommitScheduler serialize;
@@ -242,7 +245,11 @@ class VpnImportCoordinator {
             'Offline import requires local configuration bytes',
           );
         }
-        download = await stager.fetch(profile.url, const {}, cancelToken);
+        download = await stager.fetch(
+          resolveUrl(profile.url),
+          const {},
+          cancelToken,
+        );
       }
       checkCurrent();
       profile = profile.copyWith(

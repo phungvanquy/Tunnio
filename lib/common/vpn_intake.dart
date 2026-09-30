@@ -1,5 +1,7 @@
 import 'protocol.dart' show protocolSchemes;
 
+const encryptedVpnUrlPrefix = 'tunnio-rsa:';
+
 enum VpnIntakeError { empty, invalidUrl, unsupportedScheme, multipleUrls }
 
 sealed class VpnUrlIntake {
@@ -10,6 +12,13 @@ sealed class VpnUrlIntake {
   static VpnUrlIntake _parse(String input, {required bool allowWrapper}) {
     final value = input.trim();
     if (value.isEmpty) return const VpnUrlRejected(VpnIntakeError.empty);
+    if (value.startsWith(encryptedVpnUrlPrefix)) {
+      final payload = value.substring(encryptedVpnUrlPrefix.length);
+      return RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(payload) &&
+              payload.length % 4 != 1
+          ? VpnUrlAccepted(value)
+          : const VpnUrlRejected(VpnIntakeError.invalidUrl);
+    }
     if (RegExp(r'\s+https?://', caseSensitive: false).hasMatch(value)) {
       return const VpnUrlRejected(VpnIntakeError.multipleUrls);
     }

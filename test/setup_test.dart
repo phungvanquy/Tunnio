@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:test/test.dart';
 
 import '../setup.dart' as setup;
@@ -23,6 +26,33 @@ void main() {
 
     test('Flutter build environment does not depend on Core SHA256', () {
       expect(setup.createBuildEnvironment('dev'), {'APP_ENV': 'dev'});
+    });
+
+    test('uses an ignored local key or build environment for encryption', () {
+      final root = Directory.systemTemp.createTempSync('tunnio-build-key-');
+      addTearDown(() => root.deleteSync(recursive: true));
+      expect(
+        setup.readSubscriptionPrivateKey(root.path, environment: {}),
+        isNull,
+      );
+      File(
+        '${root.path}/env.local.json',
+      ).writeAsStringSync(jsonEncode({'VPN_RSA_PRIVATE_KEY_B64': 'local-key'}));
+      expect(
+        setup.readSubscriptionPrivateKey(root.path, environment: {}),
+        'local-key',
+      );
+      expect(
+        setup.readSubscriptionPrivateKey(
+          root.path,
+          environment: {'VPN_RSA_PRIVATE_KEY_B64': 'ci-key'},
+        ),
+        'ci-key',
+      );
+      expect(
+        setup.createBuildEnvironment('stable', privateKeyBase64: 'ci-key'),
+        {'APP_ENV': 'stable', 'VPN_RSA_PRIVATE_KEY_B64': 'ci-key'},
+      );
     });
 
     test('omits verbose from flutter build args by default', () {

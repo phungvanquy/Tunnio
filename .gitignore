@@ -68,6 +68,8 @@ docs/
 /macos/**/Package.resolved
 /macos/build/
 /env.json
+/env.local.json
+/.local-keys/
 /core_sha256.json
 /plugins/rust_api/.claude/
 /issue-triage/

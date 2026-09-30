@@ -898,6 +898,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnEnableDesc": MessageLookupByLibrary.simpleMessage(
       "通过VpnService自动路由系统所有流量",
     ),
+    "vpnEncryptedKeyInvalid": MessageLookupByLibrary.simpleMessage(
+      "此版本的订阅解密密钥无效。",
+    ),
+    "vpnEncryptedKeyMissing": MessageLookupByLibrary.simpleMessage(
+      "此版本未配置解密密钥，无法打开加密订阅链接。请获取包含解密密钥的应用版本。",
+    ),
+    "vpnEncryptedLinkInvalid": MessageLookupByLibrary.simpleMessage(
+      "无法解密订阅链接。请检查链接后重试。已保存的配置未被替换。",
+    ),
     "vpnFallbackDescription": MessageLookupByLibrary.simpleMessage(
       "按顺序使用第一个可用服务器",
     ),
@@ -907,7 +916,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "正在取消…请等待清理完成。",
     ),
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
-      "导入 VPN 服务商提供的订阅链接。",
+      "导入订阅网址或加密链接。",
     ),
     "vpnImportDiagnostic": m30,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage("正在下载配置…"),
@@ -925,7 +934,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportValidating": MessageLookupByLibrary.simpleMessage("正在检查配置…"),
     "vpnImporting": MessageLookupByLibrary.simpleMessage("正在导入配置…"),
     "vpnInvalidUrl": MessageLookupByLibrary.simpleMessage(
-      "请输入有效的 HTTP 或 HTTPS 订阅链接。",
+      "请输入有效的 HTTP(S) 网址或加密订阅链接。",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("测试失败"),
     "vpnLatencyMs": m32,

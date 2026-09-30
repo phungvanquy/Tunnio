@@ -1,7 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import 'intl/messages_all.dart';
 
 // **************************************************************************
@@ -5445,6 +5444,36 @@ class AppLocalizations {
     );
   }
 
+  /// `This app build cannot open encrypted links. Ask for a build with a decryption key.`
+  String get vpnEncryptedKeyMissing {
+    return Intl.message(
+      'This app build cannot open encrypted links. Ask for a build with a decryption key.',
+      name: 'vpnEncryptedKeyMissing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This app build has an invalid subscription decryption key.`
+  String get vpnEncryptedKeyInvalid {
+    return Intl.message(
+      'This app build has an invalid subscription decryption key.',
+      name: 'vpnEncryptedKeyInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The encrypted link could not be opened. Check the link and try again. Your saved configuration has not been replaced.`
+  String get vpnEncryptedLinkInvalid {
+    return Intl.message(
+      'The encrypted link could not be opened. Check the link and try again. Your saved configuration has not been replaced.',
+      name: 'vpnEncryptedLinkInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Your saved configuration is safe, but the VPN could not be restored. Retry recovery in Settings.`
   String get vpnRecoveryRequired {
     return Intl.message(
@@ -5475,20 +5504,20 @@ class AppLocalizations {
     );
   }
 
-  /// `Import the subscription URL from your VPN provider.`
+  /// `Import a subscription URL or encrypted link.`
   String get vpnImportDescription {
     return Intl.message(
-      'Import the subscription URL from your VPN provider.',
+      'Import a subscription URL or encrypted link.',
       name: 'vpnImportDescription',
       desc: '',
       args: [],
     );
   }
 
-  /// `Subscription URL`
+  /// `Subscription link`
   String get vpnSubscriptionUrl {
     return Intl.message(
-      'Subscription URL',
+      'Subscription link',
       name: 'vpnSubscriptionUrl',
       desc: '',
       args: [],
@@ -5630,10 +5659,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Enter a valid HTTP or HTTPS subscription URL.`
+  /// `Enter a valid HTTP(S) URL or encrypted subscription link.`
   String get vpnInvalidUrl {
     return Intl.message(
-      'Enter a valid HTTP or HTTPS subscription URL.',
+      'Enter a valid HTTP(S) URL or encrypted subscription link.',
       name: 'vpnInvalidUrl',
       desc: '',
       args: [],

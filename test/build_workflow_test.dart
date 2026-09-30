@@ -127,7 +127,12 @@ void main() {
     expect(signing['if'], "matrix.platform == 'android' && $tagPush");
     expect(signing['run'], contains(r'if [[ "$IS_STABLE" == "true" ]]; then'));
     expect(signing['run'], contains('Stable Android releases require'));
-    expect(setup['run'], startsWith('dart setup.dart '));
+    expect(setup['shell'], 'bash');
+    expect(setup['run'], contains('set -o pipefail\n'));
+    expect(
+      setup['run'],
+      contains(RegExp(r'^dart setup\.dart ', multiLine: true)),
+    );
     expect(setup['run'], contains(r'${{ matrix.args }}'));
     expect(upload['uses'], 'actions/upload-artifact@v7');
     expect(upload['if'], '\${{ !($tagPush) }}');

@@ -1240,6 +1240,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnEnableDesc": MessageLookupByLibrary.simpleMessage(
       "Route all system traffic through VpnService automatically",
     ),
+    "vpnEncryptedKeyInvalid": MessageLookupByLibrary.simpleMessage(
+      "This app build has an invalid subscription decryption key.",
+    ),
+    "vpnEncryptedKeyMissing": MessageLookupByLibrary.simpleMessage(
+      "This app build cannot open encrypted links. Ask for a build with a decryption key.",
+    ),
+    "vpnEncryptedLinkInvalid": MessageLookupByLibrary.simpleMessage(
+      "The encrypted link could not be opened. Check the link and try again. Your saved configuration has not been replaced.",
+    ),
     "vpnFallbackDescription": MessageLookupByLibrary.simpleMessage(
       "Use the first available server in order",
     ),
@@ -1251,7 +1260,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Cancelling… Please wait for cleanup.",
     ),
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
-      "Import the subscription URL from your VPN provider.",
+      "Import a subscription URL or encrypted link.",
     ),
     "vpnImportDiagnostic": m30,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage(
@@ -1281,7 +1290,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Importing configuration…",
     ),
     "vpnInvalidUrl": MessageLookupByLibrary.simpleMessage(
-      "Enter a valid HTTP or HTTPS subscription URL.",
+      "Enter a valid HTTP(S) URL or encrypted subscription link.",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("Test failed"),
     "vpnLatencyMs": m32,
@@ -1354,7 +1363,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Could not confirm disconnection. Tap Disconnect to retry.",
     ),
     "vpnSubscriptionUrl": MessageLookupByLibrary.simpleMessage(
-      "Subscription URL",
+      "Subscription link",
     ),
     "vpnSuspended": MessageLookupByLibrary.simpleMessage("Suspended"),
     "vpnTestLatency": MessageLookupByLibrary.simpleMessage("Test latency"),
