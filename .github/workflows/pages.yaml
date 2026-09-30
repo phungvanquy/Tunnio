@@ -1,0 +1,63 @@
+name: Encryption page
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'site/**'
+      - 'test/site/**'
+      - 'tool/build_pages.mjs'
+      - '.github/workflows/pages.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+      - 'test/site/**'
+      - 'tool/build_pages.mjs'
+      - '.github/workflows/pages.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: encryption-page-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Test encryption and page behavior
+        run: node --test test/site/*.test.mjs
+      - name: Prepare public files
+        run: node tool/build_pages.mjs
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/pages
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

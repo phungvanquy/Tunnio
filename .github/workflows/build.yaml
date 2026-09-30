@@ -5,6 +5,11 @@ on:
   push:
     branches:
       - '**'
+    paths-ignore:
+      - 'site/**'
+      - 'test/site/**'
+      - 'tool/build_pages.mjs'
+      - '.github/workflows/pages.yaml'
     tags:
       - 'v*'
 

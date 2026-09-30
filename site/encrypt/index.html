@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="description" content="Create an encrypted subscription link for Tunnio. Encryption happens in your browser.">
+  <meta name="color-scheme" content="light dark">
+  <title>Encrypt a subscription · Tunnio</title>
+  <link rel="icon" href="./icon.png" type="image/png">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Tunnio encryption home">
+      <img src="./icon.png" alt="" width="42" height="42">
+      <span>Tunnio</span>
+    </a>
+    <a class="source-link" href="https://github.com/phungvanquy/Tunnio" rel="noreferrer">View project <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main>
+    <div class="introduction">
+      <span class="eyebrow">SUBSCRIPTION TOOLS</span>
+      <h1>A private link.<br>A simpler connection.</h1>
+      <p>Create an encrypted subscription link to import into Tunnio.</p>
+    </div>
+
+    <section class="workspace" aria-labelledby="form-title">
+      <div class="workspace-heading">
+        <h2 id="form-title">Encrypt your URL</h2>
+        <span id="key-status" class="key-status" role="status">Loading public key…</span>
+      </div>
+      <form id="encrypt-form" autocomplete="off" novalidate>
+        <label for="subscription">Subscription URL</label>
+        <textarea id="subscription" rows="3" placeholder="https://your-provider.com/subscription"
+          inputmode="url" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off"
+          aria-describedby="input-hint byte-count input-error"></textarea>
+        <div class="input-meta">
+          <p id="input-hint">Paste the original HTTP or HTTPS link.</p>
+          <span id="byte-count">0 bytes</span>
+        </div>
+        <p id="input-error" class="error" role="alert"></p>
+        <div class="actions">
+          <button id="encrypt" class="primary" type="submit" disabled>Encrypt URL</button>
+          <button id="clear" class="secondary" type="button">Clear</button>
+        </div>
+      </form>
+
+      <section id="result" class="result" aria-labelledby="result-title" hidden>
+        <div class="result-heading">
+          <label id="result-title" for="encrypted-link">Your encrypted link</label>
+          <button id="copy" class="secondary compact" type="button" disabled>Copy link</button>
+        </div>
+        <textarea id="encrypted-link" rows="5" readonly spellcheck="false" aria-describedby="result-hint"></textarea>
+        <p id="result-hint">Paste this link into Tunnio when importing or replacing a configuration.</p>
+      </section>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <noscript><p class="error">Enable JavaScript to encrypt a URL in your browser.</p></noscript>
+
+      <div class="privacy-note">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <rect x="5" y="10" width="14" height="11" rx="3"></rect>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"></path>
+        </svg>
+        <p>Your URL stays in this browser. This page does not upload or store it.</p>
+      </div>
+    </section>
+
+    <div class="supporting-content">
+      <p>Made for Tunnio. Use an app build configured with the matching key.</p>
+      <details>
+        <summary>Encryption details</summary>
+        <dl>
+          <div><dt>Algorithm</dt><dd>RSA-OAEP · SHA-256</dd></div>
+          <div><dt>Public key</dt><dd id="key-size">Loading…</dd></div>
+          <div><dt>URL limit</dt><dd id="max-bytes">Loading…</dd></div>
+          <div><dt>Link format</dt><dd><code>tunnio-rsa:…</code></dd></div>
+          <div class="fingerprint"><dt>Public key SHA-256</dt><dd><code id="key-fingerprint">Loading…</code></dd></div>
+        </dl>
+        <a href="./public.pem" download="tunnio-public.pem">Download public key</a>
+      </details>
+    </div>
+  </main>
+  <footer>Open source. Encrypted in your browser.</footer>
+</body>
+</html>
