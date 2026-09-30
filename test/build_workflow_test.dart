@@ -125,8 +125,6 @@ void main() {
 
     expect(checkout['with']['submodules'], 'recursive');
     expect(signing['if'], "matrix.platform == 'android' && $tagPush");
-    expect(signing['run'], contains(r'if [[ "$IS_STABLE" == "true" ]]; then'));
-    expect(signing['run'], contains('Stable Android releases require'));
     expect(setup['shell'], 'bash');
     expect(setup['run'], contains('set -o pipefail\n'));
     expect(
@@ -148,6 +146,89 @@ void main() {
       isFalse,
     );
   });
+
+  group('Android signing setup', () {
+    late Directory workspace;
+    final steps = build['steps'] as YamlList;
+    final signing = steps.firstWhere(
+      (step) => step['name'] == 'Setup Android Signing',
+    );
+
+    ProcessResult runSigning(Map<String, String> environment) =>
+        Process.runSync(
+          'bash',
+          ['-e', '-c', signing['run'] as String],
+          workingDirectory: workspace.path,
+          environment: {
+            'IS_STABLE': 'true',
+            'KEYSTORE': '',
+            'KEY_ALIAS': '',
+            'STORE_PASSWORD': '',
+            'KEY_PASSWORD': '',
+            ...environment,
+          },
+        );
+
+    setUp(() {
+      workspace = Directory.systemTemp.createTempSync('tunnio-signing-');
+      Directory('${workspace.path}/android/app').createSync(recursive: true);
+    });
+
+    tearDown(() => workspace.deleteSync(recursive: true));
+
+    for (final stable in ['true', 'false']) {
+      test('missing keystore permits fallback with IS_STABLE=$stable', () {
+        final result = runSigning({'IS_STABLE': stable});
+        expect(result.exitCode, 0, reason: result.stderr.toString());
+        expect(result.stdout, contains('debug signing fallback'));
+        expect(
+          File('${workspace.path}/android/app/keystore.jks').existsSync(),
+          isFalse,
+        );
+        expect(
+          File('${workspace.path}/android/local.properties').existsSync(),
+          isFalse,
+        );
+      });
+    }
+
+    test('configured credentials are written without logging them', () {
+      final result = runSigning({
+        'KEYSTORE': base64Encode(utf8.encode('fixture-keystore')),
+        'KEY_ALIAS': 'fixture-alias',
+        'STORE_PASSWORD': 'fixture-store-password',
+        'KEY_PASSWORD': 'fixture-key-password',
+      });
+      expect(result.exitCode, 0, reason: result.stderr.toString());
+      expect(
+        File('${workspace.path}/android/app/keystore.jks').readAsStringSync(),
+        'fixture-keystore',
+      );
+      expect(
+        File('${workspace.path}/android/local.properties').readAsStringSync(),
+        'keyAlias=fixture-alias\nstorePassword=fixture-store-password\nkeyPassword=fixture-key-password\n',
+      );
+      expect('${result.stdout}${result.stderr}', isNot(contains('fixture-')));
+    });
+
+    test('a supplied keystore still requires complete credentials', () {
+      for (final missing in ['KEY_ALIAS', 'STORE_PASSWORD', 'KEY_PASSWORD']) {
+        final result = runSigning({
+          'KEYSTORE': base64Encode(utf8.encode('fixture-keystore')),
+          'KEY_ALIAS': 'fixture-alias',
+          'STORE_PASSWORD': 'fixture-store-password',
+          'KEY_PASSWORD': 'fixture-key-password',
+          missing: '',
+        });
+        expect(result.exitCode, isNot(0));
+        expect(result.stderr, contains('$missing is required'));
+        expect(
+          File('${workspace.path}/android/app/keystore.jks').existsSync(),
+          isFalse,
+        );
+      }
+    });
+  }, skip: !Platform.isLinux);
 
   test('Core checkout points to the published repository without SSH keys', () {
     final submodules = File('.gitmodules').readAsStringSync();

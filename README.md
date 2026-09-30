@@ -77,6 +77,13 @@ See [VPN setup, routing, and migration](VPN_GUIDE.md) for connection-state meani
 
 ### Android
 
+APK builds do not require a Play Store account. Without the `KEYSTORE` GitHub Actions
+secret, CI uses debug signing and the `com.follow.clash.dev` application ID, including
+tagged builds. This installs alongside the release-signed app. APKs from different CI
+runs may require reinstalling because their debug keys can differ. For consistent
+upgrades, configure `KEYSTORE` (base64 keystore), `KEY_ALIAS`, `STORE_PASSWORD`, and
+`KEY_PASSWORD` in Actions secrets; these are separate from the subscription RSA key.
+
 Support the following actions
 
    ```bash
