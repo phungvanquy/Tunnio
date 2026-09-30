@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync, privateDecrypt } from 'node:crypto';
 import { test } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
+import { Canvas } from './canvas.mjs';
 
 const nativeCrypto = globalThis.crypto;
 const pair = generateKeyPairSync('rsa', { modulusLength: 2048 });
@@ -28,7 +29,7 @@ class Element {
   select() { this.selected = true; }
 }
 
-async function page(context, { encrypt, clipboard, keyAvailable = true, secure = true } = {}) {
+async function page(context, { encrypt, clipboard, keyAvailable = true, secure = true, canvasAvailable = true } = {}) {
   const names = ['document', 'window', 'fetch', 'navigator', 'crypto', 'isSecureContext'];
   const previous = new Map(names.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   context.after(() => {
@@ -40,14 +41,17 @@ async function page(context, { encrypt, clipboard, keyAvailable = true, secure =
   const ids = [
     'encrypt-form', 'subscription', 'encrypt', 'clear', 'byte-count', 'input-error',
     'result', 'encrypted-link', 'copy', 'status', 'key-status', 'key-size',
-    'key-fingerprint', 'max-bytes',
+    'key-fingerprint', 'max-bytes', 'qr-result', 'qr-error',
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new Element()]));
+  elements['qr-code'] = new Canvas();
+  if (!canvasAvailable) elements['qr-code'].getContext = () => null;
   const requests = [];
   const copied = [];
   const window = new Element();
   elements.encrypt.disabled = true;
   elements.result.hidden = true;
+  elements['qr-result'].hidden = true;
   elements['key-status'].textContent = 'Loading public key…';
   elements['encrypt-form'].reset = () => {
     elements.subscription.value = '';
@@ -88,6 +92,8 @@ test('encrypts, copies, and clears without requesting or storing the input URL',
   ui.subscription.emit('input');
   await ui['encrypt-form'].emit('submit');
   assert.equal(ui.result.hidden, false);
+  assert.equal(ui['qr-result'].hidden, false);
+  assert.ok(ui['qr-code'].rectangles.length > 100);
   const token = ui['encrypted-link'].value;
   const decoded = privateDecrypt({ key: pair.privateKey, oaepHash: 'sha256' }, Buffer.from(token.slice(11), 'base64url'));
   assert.equal(decoded.toString(), ui.subscription.value);
@@ -101,6 +107,10 @@ test('encrypts, copies, and clears without requesting or storing the input URL',
   assert.equal(ui.subscription.value, '');
   assert.equal(ui['encrypted-link'].value, '');
   assert.equal(ui.result.hidden, true);
+  assert.equal(ui['qr-result'].hidden, true);
+  assert.equal(ui['qr-code'].width, 0);
+  assert.equal(ui['qr-code'].height, 0);
+  assert.deepEqual(ui['qr-code'].rectangles, []);
 });
 
 test('rejects invalid input and clears an earlier encrypted result on editing', async (context) => {
@@ -111,6 +121,8 @@ test('rejects invalid input and clears an earlier encrypted result on editing', 
   ui.subscription.emit('input');
   assert.equal(ui.result.hidden, true);
   assert.equal(ui.copy.disabled, true);
+  assert.equal(ui['qr-result'].hidden, true);
+  assert.deepEqual(ui['qr-code'].rectangles, []);
   await ui['encrypt-form'].emit('submit');
   assert.match(ui['input-error'].textContent, /HTTP or HTTPS/);
   assert.equal(ui.subscription.attributes.get('aria-invalid'), 'true');
@@ -133,6 +145,8 @@ for (const action of ['edit', 'clear']) {
     await pending;
     assert.equal(ui.result.hidden, true);
     assert.equal(ui['encrypted-link'].value, '');
+    assert.equal(ui['qr-result'].hidden, true);
+    assert.deepEqual(ui['qr-code'].rectangles, []);
     assert.equal(ui.encrypt.disabled, false);
   });
 }
@@ -144,6 +158,20 @@ test('clipboard denial selects the encrypted link for manual copying', async (co
   await ui.copy.emit('click');
   assert.equal(ui['encrypted-link'].selected, true);
   assert.match(ui.status.textContent, /manually/);
+});
+
+test('QR rendering failure keeps the encrypted link available to copy', async (context) => {
+  const { elements: ui, copied } = await page(context, { canvasAvailable: false });
+  ui.subscription.value = 'https://example.test/sub';
+  await ui['encrypt-form'].emit('submit');
+  assert.equal(ui.result.hidden, false);
+  assert.equal(ui['qr-result'].hidden, true);
+  assert.match(ui['qr-error'].textContent, /still copy/);
+  await ui.copy.emit('click');
+  assert.deepEqual(copied, [ui['encrypted-link'].value]);
+  ui.clear.emit('click');
+  assert.equal(ui['qr-error'].textContent, '');
+  assert.equal(ui['qr-code'].width, 0);
 });
 
 test('missing public key disables encryption and gives a recoverable error', async (context) => {

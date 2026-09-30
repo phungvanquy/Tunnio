@@ -56,6 +56,11 @@
         </div>
         <textarea id="encrypted-link" rows="5" readonly spellcheck="false" aria-describedby="result-hint"></textarea>
         <p id="result-hint">Paste this link into Tunnio when importing or replacing a configuration.</p>
+        <figure id="qr-result" class="qr-result" hidden>
+          <canvas id="qr-code" width="0" height="0" role="img" aria-label="QR code of the encrypted subscription link"></canvas>
+          <figcaption>Scan to copy the encrypted link to another device.</figcaption>
+        </figure>
+        <p id="qr-error" class="error" role="alert"></p>
       </section>
       <p id="status" class="status" role="status" aria-live="polite"></p>
       <noscript><p class="error">Enable JavaScript to encrypt a URL in your browser.</p></noscript>

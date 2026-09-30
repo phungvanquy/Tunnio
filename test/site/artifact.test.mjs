@@ -15,7 +15,10 @@ test('deployment copies only the public allowlist, excluding stray keys and file
   await writeFile(new URL('private.pem', source), 'TEST PRIVATE KEY MUST NOT BE PUBLISHED');
   await writeFile(new URL('env.local.json', source), '{"test":"do not publish"}');
   await buildPages(source, destination);
-  assert.deepEqual((await readdir(destination)).sort(), [...publicFiles].sort());
+  const published = (await readdir(destination, { recursive: true, withFileTypes: true }))
+    .filter((entry) => entry.isFile())
+    .map((entry) => new URL(entry.name, pathToFileURL(entry.parentPath + '/')).href.slice(destination.href.length));
+  assert.deepEqual(published.sort(), [...publicFiles].sort());
   for (const file of publicFiles) {
     assert.deepEqual(await readFile(new URL(file, destination)), await readFile(new URL(file, source)));
   }

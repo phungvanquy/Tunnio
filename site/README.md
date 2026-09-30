@@ -4,6 +4,8 @@ This static page uses Web Crypto to create `tunnio-rsa:` links with RSA-OAEP/SHA
 SHA-256 MGF1, an empty label, and unpadded Base64URL ciphertext. URLs remain in browser
 memory; the page makes no request to the subscription provider and uses no analytics,
 external scripts, or persistent browser storage. It needs HTTPS or localhost.
+The result also includes a QR code of the exact encrypted link, generated locally.
+Editing or clearing the input removes both the link and its QR code.
 
 The deployed page lives at https://phungvanquy.github.io/Tunnio/ after Pages is enabled
 and the workflow reaches `main`. GitHub Pages serves the page; it does not perform
@@ -36,7 +38,14 @@ Changes to `site/**`, `test/site/**`, `tool/build_pages.mjs`, or the Pages workf
 trigger validation. Pushes to `main` also deploy after validation passes; manual runs
 on `main` can redeploy. Ordinary app changes do not deploy Pages. Page-only commits
 skip the application packaging workflow; mixed changes and release tags still run it.
-The upload contains only six explicitly selected files staged in `build/pages/`.
+The upload contains only explicitly selected public files staged in `build/pages/`.
+
+## QR library
+
+The page bundles `qrcode-generator` 2.0.4 under its MIT license, with no CDN requests.
+`site/encrypt/vendor/qrcode.mjs` and its license are unmodified copies from
+[upstream commit 83b7e8f](https://github.com/kazuhikoarase/qrcode-generator/tree/83b7e8fe3fddd3b0368dbafd6ce56995bd25e3c8).
+QR codes use byte mode, medium error correction, and a four-module white border.
 
 ## Public key updates
 

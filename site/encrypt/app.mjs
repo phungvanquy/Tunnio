@@ -1,4 +1,5 @@
 import { encryptSubscription, importPublicKey, subscriptionBytes } from './crypto.mjs';
+import { renderEncryptedQr } from './qr.mjs';
 
 const form = document.querySelector('#encrypt-form');
 const input = document.querySelector('#subscription');
@@ -11,6 +12,9 @@ const output = document.querySelector('#encrypted-link');
 const copy = document.querySelector('#copy');
 const status = document.querySelector('#status');
 const keyStatus = document.querySelector('#key-status');
+const qrResult = document.querySelector('#qr-result');
+const qrCanvas = document.querySelector('#qr-code');
+const qrError = document.querySelector('#qr-error');
 let keyInfo;
 let revision = 0;
 let busy = false;
@@ -18,6 +22,9 @@ let busy = false;
 function invalidate() {
   revision += 1;
   output.value = '';
+  qrCanvas.width = qrCanvas.height = 0;
+  qrResult.hidden = true;
+  qrError.textContent = '';
   result.hidden = true;
   copy.disabled = true;
   error.textContent = '';
@@ -67,6 +74,12 @@ form.addEventListener('submit', async (event) => {
     output.value = encrypted;
     result.hidden = false;
     copy.disabled = false;
+    try {
+      renderEncryptedQr(qrCanvas, encrypted);
+      qrResult.hidden = false;
+    } catch {
+      qrError.textContent = 'QR code is unavailable. You can still copy the encrypted link.';
+    }
     status.textContent = 'Your encrypted link is ready.';
     output.focus();
   } catch {

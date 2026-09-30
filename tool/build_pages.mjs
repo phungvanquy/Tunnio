@@ -4,6 +4,7 @@ import { importPublicKey } from '../site/encrypt/crypto.mjs';
 
 export const publicFiles = [
   'index.html', 'app.mjs', 'crypto.mjs', 'style.css', 'public.pem', 'icon.png',
+  'qr.mjs', 'vendor/qrcode.mjs', 'vendor/qrcode.LICENSE.txt',
 ];
 
 export async function buildPages(
@@ -19,6 +20,7 @@ export async function buildPages(
   await rm(destination, { recursive: true, force: true });
   await mkdir(destination, { recursive: true });
   for (const file of publicFiles) {
+    await mkdir(new URL('.', new URL(file, destination)), { recursive: true });
     await copyFile(new URL(file, source), new URL(file, destination));
   }
   return key;
