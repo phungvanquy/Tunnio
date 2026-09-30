@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.1 (2026-09-30)
+
+**Features**
+
+- **branding** Update app and subscription encryption page icons with the new ITMOTunnio logo (d7f5c2d)
+- **web** Show a scannable QR code for encrypted subscription links (3da93ca)
+- **web** Add a browser tool for creating encrypted subscription links (8b030ec)
+- **subscription** Support encrypted subscription links and simplify Settings (e538bc7)
+- **branding** Refresh Tunnio app icons with the new logo (99f9546)
+
 ## v1.0.0 (2026-09-29)
 
 **Features**

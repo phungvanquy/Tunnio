@@ -2,6 +2,44 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "1.0.1",
+      "tag": "v1.0.1",
+      "date": "2026-09-30",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "d7f5c2d",
+              "scope": "branding",
+              "text": "Update app and subscription encryption page icons with the new ITMOTunnio logo"
+            },
+            {
+              "id": "3da93ca",
+              "scope": "web",
+              "text": "Show a scannable QR code for encrypted subscription links"
+            },
+            {
+              "id": "8b030ec",
+              "scope": "web",
+              "text": "Add a browser tool for creating encrypted subscription links"
+            },
+            {
+              "id": "e538bc7",
+              "scope": "subscription",
+              "text": "Support encrypted subscription links and simplify Settings"
+            },
+            {
+              "id": "99f9546",
+              "scope": "branding",
+              "text": "Refresh Tunnio app icons with the new logo"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.0.0",
       "tag": "v1.0.0",
       "date": "2026-09-29",
