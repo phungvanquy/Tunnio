@@ -10,6 +10,10 @@
 - **subscription** Support encrypted subscription links and simplify Settings (e538bc7)
 - **branding** Refresh Tunnio app icons with the new logo (99f9546)
 
+**Bug Fixes**
+
+- **android** Keep the new Android and TV launcher logo centered within the safe area (c965ab4)
+
 ## v1.0.0 (2026-09-29)
 
 **Features**

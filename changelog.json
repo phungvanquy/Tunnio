@@ -36,6 +36,16 @@
               "text": "Refresh Tunnio app icons with the new logo"
             }
           ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "c965ab4",
+              "scope": "android",
+              "text": "Keep the new Android and TV launcher logo centered within the safe area"
+            }
+          ]
         }
       ]
     },
