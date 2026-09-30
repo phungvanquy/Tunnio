@@ -6,6 +6,8 @@ import 'ico.dart';
 
 const _androidApp = 'android/app/src/main/res';
 const _androidService = 'android/service/src/main/res';
+// The entire square, including opaque corners, must fit the circular safe zone.
+const _adaptiveIconFraction = .42;
 const _densities = {
   'mdpi': 48,
   'hdpi': 72,
@@ -128,11 +130,16 @@ Future<void> generateBrandIcons(img.Image logo, Directory root) async {
   }
   await writePng(
     '$_androidApp/drawable-nodpi/tunnio_launcher.png',
-    brandIcon(logo, 432, fraction: .52),
+    brandIcon(logo, 432, fraction: _adaptiveIconFraction),
   );
   await writePng(
     '$_androidApp/drawable-nodpi/tunnio_monochrome.png',
-    brandIcon(logo, 432, fraction: .52, tint: img.ColorRgb8(255, 255, 255)),
+    brandIcon(
+      logo,
+      432,
+      fraction: _adaptiveIconFraction,
+      tint: img.ColorRgb8(255, 255, 255),
+    ),
   );
   await writePng(
     '$_androidService/drawable-nodpi/tunnio_notification.png',

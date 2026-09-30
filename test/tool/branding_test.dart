@@ -169,11 +169,13 @@ void main() {
         'android/app/src/main/res/drawable-nodpi/tunnio_monochrome.png',
       );
       expect([monochrome.width, monochrome.height], [432, 432]);
-      for (final pixel in monochrome) {
-        if (pixel.a < 10) continue;
-        final x = pixel.x - 216;
-        final y = pixel.y - 216;
-        expect(x * x + y * y, lessThan(132 * 132));
+      for (final image in [foreground, monochrome]) {
+        for (final pixel in image) {
+          if (pixel.a < 10) continue;
+          final x = pixel.x - 216;
+          final y = pixel.y - 216;
+          expect(x * x + y * y, lessThan(132 * 132));
+        }
       }
       for (final entry in {
         'mdpi': 48,
