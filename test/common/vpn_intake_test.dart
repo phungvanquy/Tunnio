@@ -57,6 +57,24 @@ void main() {
   });
 
   test(
+    'accepts encrypted links directly and through installation wrappers',
+    () {
+      const token = 'tunnio-rsa:QUJDRA';
+      expect((VpnUrlIntake.parse(token) as VpnUrlAccepted).url, token);
+      final wrapped =
+          'tunnio://install-config?url=${Uri.encodeComponent(token)}';
+      expect((VpnUrlIntake.parse(wrapped) as VpnUrlAccepted).url, token);
+      for (final invalid in [
+        'tunnio-rsa:',
+        'tunnio-rsa:A',
+        'tunnio-rsa:ABC=',
+      ]) {
+        expect(VpnUrlIntake.parse(invalid), isA<VpnUrlRejected>());
+      }
+    },
+  );
+
+  test(
     'malformed optional subscription metadata cannot throw or erase valid fields',
     () {
       expect(SubscriptionInfo.formHString(''), const SubscriptionInfo());

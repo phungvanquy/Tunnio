@@ -55,37 +55,6 @@ class ApplicationSettingView extends StatelessWidget {
       ),
       if (system.isAndroid)
         _appSettingToggle(
-          title: (l) => l.exclude,
-          subtitle: (l) => l.excludeDesc,
-          select: (state) => state.hidden,
-          update: (state, value) => state.copyWith(hidden: value),
-        ),
-      _appSettingToggle(
-        title: (l) => l.tabAnimation,
-        subtitle: (l) => l.tabAnimationDesc,
-        select: (state) => state.isAnimateToPage,
-        update: (state, value) => state.copyWith(isAnimateToPage: value),
-      ),
-      _appSettingToggle(
-        title: (l) => l.logcat,
-        subtitle: (l) => l.logcatDesc,
-        select: (state) => state.openLogs,
-        update: (state, value) => state.copyWith(openLogs: value),
-      ),
-      _appSettingToggle(
-        title: (l) => l.autoCloseConnections,
-        subtitle: (l) => l.autoCloseConnectionsDesc,
-        select: (state) => state.closeConnections,
-        update: (state, value) => state.copyWith(closeConnections: value),
-      ),
-      _appSettingToggle(
-        title: (l) => l.onlyStatisticsProxy,
-        subtitle: (l) => l.onlyStatisticsProxyDesc,
-        select: (state) => state.onlyStatisticsProxy,
-        update: (state, value) => state.copyWith(onlyStatisticsProxy: value),
-      ),
-      if (system.isAndroid)
-        _appSettingToggle(
           title: (l) => l.showNotificationStopAction,
           subtitle: (l) => l.showNotificationStopActionDesc,
           select: (state) => state.showNotificationStopAction,

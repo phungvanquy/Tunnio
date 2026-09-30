@@ -1256,32 +1256,17 @@ void main() {
     );
   });
 
-  homeTest(
-    'Settings routing toggle waits for commit and retains state on failure',
-    (tester) async {
-      setProfile(configured());
-      vpn.gate = Completer<bool>();
-      await pump(tester);
-      await tester.tap(find.byKey(const Key('vpn-settings')));
-      await tester.pumpAndSettle();
-      final toggle = find.byKey(const Key('vpn-custom-routing'));
-      await tester.ensureVisible(toggle);
-      await tester.tap(toggle);
-      await tester.pump();
-      expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
-      vpn.gate!.complete(false);
-      await tester.pumpAndSettle();
-      expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
-      expect(
-        container.read(currentProfileProvider)!.snapshot.routing,
-        VpnRoutingMode.simple,
-      );
-      expect(
-        find.textContaining('operation could not be completed'),
-        findsOneWidget,
-      );
-    },
-  );
+  homeTest('Settings keeps replacement but hides routing controls', (
+    tester,
+  ) async {
+    setProfile(configured());
+    await pump(tester);
+    await tester.tap(find.byKey(const Key('vpn-settings')));
+    await tester.pumpAndSettle();
+    expect(find.text('Replace configuration'), findsOneWidget);
+    expect(find.byKey(const Key('vpn-custom-routing')), findsNothing);
+    expect(find.text('Export file'), findsNothing);
+  });
 
   homeTest('resizing Home retains the committed server selection', (
     tester,

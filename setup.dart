@@ -124,8 +124,41 @@ List<String> createFlutterBuildArgs({
   return flutterBuildArgs;
 }
 
-Map<String, String> createBuildEnvironment(String env) {
-  return {'APP_ENV': env};
+Map<String, String> createBuildEnvironment(
+  String env, {
+  String? privateKeyBase64,
+}) {
+  return {
+    'APP_ENV': env,
+    if (privateKeyBase64 != null && privateKeyBase64.isNotEmpty)
+      'VPN_RSA_PRIVATE_KEY_B64': privateKeyBase64,
+  };
+}
+
+String? readSubscriptionPrivateKey(
+  String rootDir, {
+  Map<String, String>? environment,
+}) {
+  final fromEnvironment =
+      (environment ?? Platform.environment)['VPN_RSA_PRIVATE_KEY_B64'];
+  if (fromEnvironment != null && fromEnvironment.isNotEmpty) {
+    return fromEnvironment;
+  }
+  final file = File(p.join(rootDir, 'env.local.json'));
+  if (!file.existsSync()) return null;
+  Object? data;
+  try {
+    data = jsonDecode(file.readAsStringSync());
+  } catch (_) {
+    throw const FormatException('env.local.json must contain valid JSON');
+  }
+  if (data is! Map<String, dynamic> ||
+      data['VPN_RSA_PRIVATE_KEY_B64'] is! String) {
+    throw const FormatException(
+      'env.local.json must contain VPN_RSA_PRIVATE_KEY_B64',
+    );
+  }
+  return data['VPN_RSA_PRIVATE_KEY_B64'] as String;
 }
 
 /// Packages whose build hook `pubspec.yaml` turns into a no-op.
@@ -164,7 +197,14 @@ Future<int> _package(
   required bool verbose,
 }) async {
   final file = File(p.join(rootDir, 'env.json'));
-  await file.writeAsString(jsonEncode(createBuildEnvironment(env)));
+  await file.writeAsString(
+    jsonEncode(
+      createBuildEnvironment(
+        env,
+        privateKeyBase64: readSubscriptionPrivateKey(rootDir),
+      ),
+    ),
+  );
 
   final flutterBuildArgs = createFlutterBuildArgs(
     platform: platform,

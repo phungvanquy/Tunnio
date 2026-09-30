@@ -6,13 +6,20 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'dart:ui';
 
 import 'vpn_coordinator.dart';
+import 'vpn_subscription_url.dart';
 
 final currentAppLocalizations = AppLocalizations.current;
 
 String vpnImportFailureMessage(VpnImportResult result, AppLocalizations text) {
-  final summary = result.timedOut
-      ? text.vpnImportTimedOut
-      : text.vpnImportFailed;
+  final summary = switch (result.error) {
+    VpnEncryptedUrlException(reason: VpnEncryptedUrlError.missingKey) =>
+      text.vpnEncryptedKeyMissing,
+    VpnEncryptedUrlException(reason: VpnEncryptedUrlError.invalidKey) =>
+      text.vpnEncryptedKeyInvalid,
+    VpnEncryptedUrlException(reason: VpnEncryptedUrlError.invalidToken) =>
+      text.vpnEncryptedLinkInvalid,
+    _ => result.timedOut ? text.vpnImportTimedOut : text.vpnImportFailed,
+  };
   return '$summary\n\n${text.vpnImportDiagnostic(result.diagnostic)}';
 }
 

@@ -1,12 +1,7 @@
-import 'dart:io';
-
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
-import 'package:fl_clash/views/profiles/edit.dart';
-import 'package:fl_clash/views/profiles/overwrite/overwrite.dart';
-import 'package:fl_clash/views/proxies/proxies.dart';
 import 'package:fl_clash/widgets/vpn_import.dart';
 import 'package:fl_clash/widgets/vpn_import_progress.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -137,18 +132,6 @@ class _VpnConfigurationSectionState
     }
   }
 
-  Future<void> _route(Profile profile, bool custom, {Mode? mode}) async {
-    final action = ref.read(vpnActionProvider.notifier);
-    final result = await action.setRouting(
-      profile,
-      custom ? VpnRoutingMode.custom : VpnRoutingMode.simple,
-      advancedMode: mode,
-    );
-    if (result.outcome != VpnImportOutcome.cancelled) {
-      action.requireSuccess(result);
-    }
-  }
-
   Future<void> _recover() async {
     if (ref.read(coreStatusProvider) != CoreStatus.connected) {
       await ref.read(coreActionProvider.notifier).startCore();
@@ -161,12 +144,6 @@ class _VpnConfigurationSectionState
     }
   }
 
-  Future<void> _exportArchive(String path) async {
-    final store = await ref.read(profileGenerationStoreProvider.future);
-    await VpnArchiveStore(store.home).verify(File(path));
-    await picker.saveFileCopy('tunnio-migration-backup.zip', path);
-  }
-
   @override
   Widget build(BuildContext context) {
     final text = context.appLocalizations;
@@ -175,7 +152,6 @@ class _VpnConfigurationSectionState
     final recovery =
         ref.watch(vpnFailureProvider) == 'recovery_required' ||
         migration?.error != null;
-    final custom = profile?.snapshot.routing == VpnRoutingMode.custom;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -213,18 +189,6 @@ class _VpnConfigurationSectionState
               : () =>
                     showVpnImportDialog(context, replacement: profile != null),
         ),
-        ListItem(
-          leading: const Icon(Icons.upload_file_outlined),
-          title: Text(text.file),
-          subtitle: Text(text.fileDesc),
-          onTap: _busy
-              ? null
-              : () => _run(
-                  () => ref
-                      .read(profilesActionProvider.notifier)
-                      .addProfileFormFile(),
-                ),
-        ),
         if (profile != null) ...[
           if (profile.type == ProfileType.url)
             ListItem(
@@ -257,67 +221,7 @@ class _VpnConfigurationSectionState
                       );
                     }),
             ),
-          ListItem.open(
-            leading: const Icon(Icons.edit_outlined),
-            title: Text(text.edit),
-            widget: EditProfileView(context: context, profile: profile),
-          ),
-          ListItem(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(text.exportFile),
-            onTap: _busy
-                ? null
-                : () => _run(() async {
-                    final source = await profile.file;
-                    await picker.saveFileCopy(
-                      'vpn-configuration.yaml',
-                      source.path,
-                    );
-                  }),
-          ),
-          SwitchListTile(
-            key: const Key('vpn-custom-routing'),
-            title: Text(text.vpnCustomRouting),
-            subtitle: Text(text.vpnCustomRoutingDescription),
-            value: custom,
-            onChanged: _busy
-                ? null
-                : (value) => _run(() => _route(profile, value)),
-          ),
-          if (custom) ...[
-            ListItem<Mode>.options(
-              leading: const Icon(Icons.route_outlined),
-              title: Text(text.mode),
-              options: Mode.values,
-              value: profile.snapshot.advancedMode,
-              dialogTitle: text.mode,
-              textBuilder: (mode) => mode.label,
-              onChanged: (mode) {
-                if (mode != null) _run(() => _route(profile, true, mode: mode));
-              },
-            ),
-            ListItem.open(
-              leading: const Icon(Icons.account_tree_outlined),
-              title: Text(text.proxies),
-              widget: const ProxiesView(),
-              forceFull: true,
-            ),
-          ],
-          ListItem.open(
-            leading: const Icon(Icons.tune),
-            title: Text(text.override),
-            widget: OverwriteView(profileId: profile.id),
-            forceFull: true,
-          ),
         ],
-        if (migration?.archive case final String archive)
-          ListItem(
-            key: const Key('vpn-recovery-export'),
-            leading: const Icon(Icons.inventory_2_outlined),
-            title: Text(text.vpnRecoveryExport),
-            subtitle: Text(text.vpnRecoveryExportDescription),
-            onTap: _busy ? null : () => _run(() => _exportArchive(archive)),
-          ),
       ],
     );
   }

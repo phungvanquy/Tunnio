@@ -1,98 +1,21 @@
-import 'dart:io';
-
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
-import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/views/about.dart';
-import 'package:fl_clash/views/access.dart';
 import 'package:fl_clash/views/application_setting.dart';
-import 'package:fl_clash/views/backup_and_restore.dart';
-import 'package:fl_clash/views/config/config.dart';
-import 'package:fl_clash/views/hotkey.dart';
+import 'package:fl_clash/views/theme.dart';
+import 'package:fl_clash/views/vpn_configuration.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' show dirname, join;
+import 'package:material_ui/material_ui.dart';
 
-import 'config/advanced.dart';
-import 'developer.dart';
-import 'theme.dart';
-import 'vpn_configuration.dart';
-import 'connection/requests.dart';
-import 'connection/connections.dart';
-import 'resources.dart';
-import 'logs.dart';
-
-class ToolsView extends ConsumerStatefulWidget {
+class ToolsView extends StatelessWidget {
   const ToolsView({super.key});
 
   @override
-  ConsumerState<ToolsView> createState() => _ToolViewState();
-}
-
-class _ToolViewState extends ConsumerState<ToolsView> {
-  Widget _buildNavigationMenuItem(NavigationItem navigationItem) {
-    final description = navigationItem.label.description;
-    return ListItem.open(
-      leading: navigationItem.icon,
-      title: Text(navigationItem.label.label),
-      subtitle: description != null ? Text(description) : null,
-      widget: navigationItem.builder(context),
-      maxWidth: 400,
-      forceFull: false,
-    );
-  }
-
-  Widget _buildNavigationMenu(List<NavigationItem> navigationItems) {
-    return Column(
-      children: [
-        for (final navigationItem in navigationItems) ...[
-          _buildNavigationMenuItem(navigationItem),
-          navigationItems.last != navigationItem
-              ? const Divider(height: 0)
-              : Container(),
-        ],
-      ],
-    );
-  }
-
-  List<Widget> _getOtherList(bool enableDeveloperMode) {
-    return generateSection(
-      title: context.appLocalizations.other,
-      items: [
-        if (enableDeveloperMode) const _DeveloperItem(),
-        const _InfoItem(),
-      ],
-    );
-  }
-
-  List<Widget> _getSettingList() {
-    return generateSection(
-      title: context.appLocalizations.settings,
-      items: [
-        const _LocaleItem(),
-        const _ThemeItem(),
-        const _BackupItem(),
-        if (system.isDesktop) const _HotkeyItem(),
-        if (system.isWindows) const _LoopbackItem(),
-        if (system.isAndroid) const _AccessItem(),
-        const _ConfigItem(),
-        const _AdvancedConfigItem(),
-        const _SettingItem(),
-      ],
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final appSetting = ref.watch(
-      appSettingProvider.select(
-        (state) => (locale: state.locale, developerMode: state.developerMode),
-      ),
-    );
-    final items = [
+    final text = context.appLocalizations;
+    final items = <Widget>[
       const VpnConfigurationSection(),
       if (system.isAndroid)
         Padding(
@@ -101,42 +24,22 @@ class _ToolViewState extends ConsumerState<ToolsView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                context.appLocalizations.vpnAndroidHelpTitle,
+                text.vpnAndroidHelpTitle,
                 style: context.textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
-              Text(context.appLocalizations.vpnAndroidHelp),
+              Text(text.vpnAndroidHelp),
             ],
           ),
         ),
-      _buildNavigationMenu([
-        NavigationItem(
-          icon: const Icon(Icons.view_timeline),
-          label: PageLabel.requests,
-          builder: (_) => const RequestsView(),
-        ),
-        NavigationItem(
-          icon: const Icon(Icons.ballot),
-          label: PageLabel.connections,
-          builder: (_) => const ConnectionsView(),
-        ),
-        NavigationItem(
-          icon: const Icon(Icons.storage),
-          label: PageLabel.resources,
-          builder: (_) => const ResourcesView(),
-        ),
-        if (ref.watch(appSettingProvider).openLogs)
-          NavigationItem(
-            icon: const Icon(Icons.adb),
-            label: PageLabel.logs,
-            builder: (_) => const LogsView(),
-          ),
-      ]),
-      ..._getSettingList(),
-      ..._getOtherList(appSetting.developerMode),
+      ...generateSection(
+        title: text.settings,
+        items: const [_LocaleItem(), _ThemeItem(), _SettingItem()],
+      ),
+      ...generateSection(title: text.other, items: const [_InfoItem()]),
     ];
     return CommonScaffold(
-      title: context.appLocalizations.settings,
+      title: text.settings,
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
@@ -156,10 +59,8 @@ class _ToolViewState extends ConsumerState<ToolsView> {
 class _LocaleItem extends ConsumerWidget {
   const _LocaleItem();
 
-  String _getLocaleString(BuildContext context, Locale? locale) {
-    if (locale == null) return context.appLocalizations.defaultText;
-    return locale.label;
-  }
+  String _getLocaleString(BuildContext context, Locale? locale) =>
+      locale?.label ?? context.appLocalizations.defaultText;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -188,141 +89,33 @@ class _ThemeItem extends StatelessWidget {
   const _ThemeItem();
 
   @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.style),
-      title: Text(context.appLocalizations.theme),
-      subtitle: Text(context.appLocalizations.themeDesc),
-      widget: const ThemeView(),
-    );
-  }
-}
-
-class _BackupItem extends StatelessWidget {
-  const _BackupItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.cloud_sync),
-      title: Text(context.appLocalizations.backupAndRestore),
-      subtitle: Text(context.appLocalizations.backupAndRestoreDesc),
-      widget: const BackupAndRestore(),
-    );
-  }
-}
-
-class _HotkeyItem extends StatelessWidget {
-  const _HotkeyItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.keyboard),
-      title: Text(context.appLocalizations.hotkeyManagement),
-      subtitle: Text(context.appLocalizations.hotkeyManagementDesc),
-      widget: const HotKeyView(),
-    );
-  }
-}
-
-class _LoopbackItem extends StatelessWidget {
-  const _LoopbackItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem(
-      leading: const Icon(Icons.lock),
-      title: Text(context.appLocalizations.loopback),
-      subtitle: Text(context.appLocalizations.loopbackDesc),
-      onTap: () {
-        windows?.runas(
-          '"${join(dirname(Platform.resolvedExecutable), "EnableLoopback.exe")}"',
-          '',
-        );
-      },
-    );
-  }
-}
-
-class _AccessItem extends StatelessWidget {
-  const _AccessItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.view_list),
-      title: Text(context.appLocalizations.accessControl),
-      subtitle: Text(context.appLocalizations.accessControlDesc),
-      widget: const AccessView(),
-    );
-  }
-}
-
-class _ConfigItem extends StatelessWidget {
-  const _ConfigItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.edit),
-      title: Text(context.appLocalizations.basicConfig),
-      subtitle: Text(context.appLocalizations.basicConfigDesc),
-      widget: const ConfigView(),
-    );
-  }
-}
-
-class _AdvancedConfigItem extends StatelessWidget {
-  const _AdvancedConfigItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.build),
-      title: Text(context.appLocalizations.advancedConfig),
-      subtitle: Text(context.appLocalizations.advancedConfigDesc),
-      widget: const AdvancedConfigView(),
-    );
-  }
+  Widget build(BuildContext context) => ListItem.open(
+    leading: const Icon(Icons.style),
+    title: Text(context.appLocalizations.theme),
+    subtitle: Text(context.appLocalizations.themeDesc),
+    widget: const ThemeView(),
+  );
 }
 
 class _SettingItem extends StatelessWidget {
   const _SettingItem();
 
   @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.settings),
-      title: Text(context.appLocalizations.application),
-      subtitle: Text(context.appLocalizations.applicationDesc),
-      widget: const ApplicationSettingView(),
-    );
-  }
+  Widget build(BuildContext context) => ListItem.open(
+    leading: const Icon(Icons.settings),
+    title: Text(context.appLocalizations.application),
+    subtitle: Text(context.appLocalizations.applicationDesc),
+    widget: const ApplicationSettingView(),
+  );
 }
 
 class _InfoItem extends StatelessWidget {
   const _InfoItem();
 
   @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.info),
-      title: Text(context.appLocalizations.about),
-      widget: const AboutView(),
-    );
-  }
-}
-
-class _DeveloperItem extends StatelessWidget {
-  const _DeveloperItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.developer_board),
-      title: Text(context.appLocalizations.developerMode),
-      widget: const DeveloperView(),
-    );
-  }
+  Widget build(BuildContext context) => ListItem.open(
+    leading: const Icon(Icons.info),
+    title: Text(context.appLocalizations.about),
+    widget: const AboutView(),
+  );
 }

@@ -1299,6 +1299,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnEnableDesc": MessageLookupByLibrary.simpleMessage(
       "Автоматически направляет весь системный трафик через VpnService",
     ),
+    "vpnEncryptedKeyInvalid": MessageLookupByLibrary.simpleMessage(
+      "Ключ расшифрования подписки в этой сборке недействителен.",
+    ),
+    "vpnEncryptedKeyMissing": MessageLookupByLibrary.simpleMessage(
+      "Эта сборка не может открыть зашифрованные ссылки: в ней нет ключа расшифрования. Получите сборку с ключом.",
+    ),
+    "vpnEncryptedLinkInvalid": MessageLookupByLibrary.simpleMessage(
+      "Не удалось расшифровать ссылку. Проверьте её и повторите попытку. Сохранённая конфигурация не заменена.",
+    ),
     "vpnFallbackDescription": MessageLookupByLibrary.simpleMessage(
       "Использовать первый доступный сервер по порядку",
     ),
@@ -1310,7 +1319,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Отмена… Дождитесь завершения очистки.",
     ),
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
-      "Импортируйте ссылку на подписку от вашего VPN-провайдера.",
+      "Импортируйте URL подписки или зашифрованную ссылку.",
     ),
     "vpnImportDiagnostic": m30,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage(
@@ -1340,7 +1349,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Импорт конфигурации…",
     ),
     "vpnInvalidUrl": MessageLookupByLibrary.simpleMessage(
-      "Введите корректную ссылку на подписку HTTP или HTTPS.",
+      "Введите корректный HTTP(S) URL или зашифрованную ссылку на подписку.",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("Ошибка проверки"),
     "vpnLatencyMs": m32,

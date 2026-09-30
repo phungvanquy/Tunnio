@@ -1031,6 +1031,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnEnableDesc": MessageLookupByLibrary.simpleMessage(
       "VpnServiceでシステムの全トラフィックを自動的にルーティングします",
     ),
+    "vpnEncryptedKeyInvalid": MessageLookupByLibrary.simpleMessage(
+      "このアプリのサブスクリプション復号鍵が無効です。",
+    ),
+    "vpnEncryptedKeyMissing": MessageLookupByLibrary.simpleMessage(
+      "このアプリには復号鍵が含まれていないため、暗号化されたリンクを開けません。復号鍵を含むビルドを入手してください。",
+    ),
+    "vpnEncryptedLinkInvalid": MessageLookupByLibrary.simpleMessage(
+      "暗号化されたリンクを復号できませんでした。リンクを確認して再試行してください。保存済みの設定は置き換えられていません。",
+    ),
     "vpnFallbackDescription": MessageLookupByLibrary.simpleMessage(
       "順番に最初の利用可能なサーバーを使用",
     ),
@@ -1042,7 +1051,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "キャンセル中…後処理が終わるまでお待ちください。",
     ),
     "vpnImportDescription": MessageLookupByLibrary.simpleMessage(
-      "VPN プロバイダーのサブスクリプション URL を読み込んでください。",
+      "サブスクリプション URL または暗号化されたリンクを読み込んでください。",
     ),
     "vpnImportDiagnostic": m30,
     "vpnImportDownloading": MessageLookupByLibrary.simpleMessage("設定をダウンロード中…"),
@@ -1060,7 +1069,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnImportValidating": MessageLookupByLibrary.simpleMessage("設定を確認中…"),
     "vpnImporting": MessageLookupByLibrary.simpleMessage("設定を読み込み中…"),
     "vpnInvalidUrl": MessageLookupByLibrary.simpleMessage(
-      "有効な HTTP または HTTPS のサブスクリプション URL を入力してください。",
+      "有効な HTTP(S) URL または暗号化されたサブスクリプションリンクを入力してください。",
     ),
     "vpnLatencyFailed": MessageLookupByLibrary.simpleMessage("テスト失敗"),
     "vpnLatencyMs": m32,
@@ -1122,7 +1131,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnStopFailed": MessageLookupByLibrary.simpleMessage(
       "切断を確認できませんでした。「切断」で再試行してください。",
     ),
-    "vpnSubscriptionUrl": MessageLookupByLibrary.simpleMessage("サブスクリプション URL"),
+    "vpnSubscriptionUrl": MessageLookupByLibrary.simpleMessage("サブスクリプションリンク"),
     "vpnSuspended": MessageLookupByLibrary.simpleMessage("一時停止中"),
     "vpnTestLatency": MessageLookupByLibrary.simpleMessage("遅延をテスト"),
     "vpnTip": MessageLookupByLibrary.simpleMessage("変更はVPNの再起動後に有効になります"),
