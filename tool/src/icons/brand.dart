@@ -36,7 +36,7 @@ img.Image brandIcon(
       img.fill(result, color: background);
     }
   }
-  final artwork = tint == null ? logo : img.Image.from(logo);
+  final artwork = tint == null ? logo : logo.convert(numChannels: 4);
   if (tint != null) {
     for (final pixel in artwork) {
       final alpha =
@@ -83,6 +83,7 @@ Future<void> generateBrandIcons(img.Image logo, Directory root) async {
   }
 
   final background = img.ColorRgb8(7, 24, 42);
+  await writePng('site/encrypt/icon.png', brandIcon(logo, 192));
   await writePng(
     'android/app/src/main/ic_launcher-playstore.png',
     brandIcon(logo, 512),

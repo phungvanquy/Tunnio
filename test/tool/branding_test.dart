@@ -155,17 +155,21 @@ void main() {
   });
 
   test(
-    'canonical logo is transparent and generated Android layers stay inside safe area',
+    'canonical logo is square and Android artwork stays inside the safe area',
     () {
       final source = readPng('assets/images/icon.png');
       expect(source.width, source.height);
       expect(source.width, greaterThanOrEqualTo(1024));
-      expect(source.getPixel(0, 0).a, 0);
       final foreground = readPng(
         'android/app/src/main/res/drawable-nodpi/tunnio_launcher.png',
       );
       expect([foreground.width, foreground.height], [432, 432]);
-      for (final pixel in foreground) {
+      expect(foreground.getPixel(0, 0).a, 0);
+      final monochrome = readPng(
+        'android/app/src/main/res/drawable-nodpi/tunnio_monochrome.png',
+      );
+      expect([monochrome.width, monochrome.height], [432, 432]);
+      for (final pixel in monochrome) {
         if (pixel.a < 10) continue;
         final x = pixel.x - 216;
         final y = pixel.y - 216;
@@ -189,10 +193,9 @@ void main() {
     },
   );
 
-  test(
-    'monochrome rendering retains light artwork and removes the dark background',
-    () {
-      final source = img.Image(width: 2, height: 2, numChannels: 4);
+  for (final channels in [3, 4]) {
+    test('monochrome rendering extracts artwork from $channels channels', () {
+      final source = img.Image(width: 2, height: 2, numChannels: channels);
       source.setPixelRgba(0, 0, 0, 0, 0, 255);
       source.setPixelRgba(1, 0, 255, 255, 255, 255);
       source.setPixelRgba(0, 1, 7, 24, 42, 255);
@@ -203,8 +206,8 @@ void main() {
       expect(icon.getPixel(0, 1).a, 0);
       expect(icon.getPixel(1, 1).a, 0);
       expect(source.getPixel(1, 0).g, 255);
-    },
-  );
+    });
+  }
 
   test(
     'Windows ICO contains all shell sizes and macOS has each declared size',

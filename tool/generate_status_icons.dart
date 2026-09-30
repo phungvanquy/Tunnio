@@ -15,6 +15,6 @@ Future<void> main() async {
   }
   await generateBrandIcons(logo, Directory.current);
   stdout.writeln(
-    'Generated Tunnio launcher, desktop, notification and tray icons.',
+    'Generated Tunnio launcher, desktop, notification, tray and website icons.',
   );
 }

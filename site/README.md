@@ -26,6 +26,10 @@ Open http://localhost:8080. Tests generate temporary RSA key pairs and verify th
 browser ciphertext decrypts with OpenSSL through Node's crypto API. They also cover
 UTF-8 length limits, malformed inputs, UI state, and the deployment file allowlist.
 
+The page icon is generated from `assets/images/icon.png` alongside the app icons.
+After replacing that square source image, run `dart run tool/generate_status_icons.dart`
+and commit all generated assets, including `site/encrypt/icon.png`.
+
 ## Deployment
 
 In **Settings → Pages → Build and deployment → Source**, select **GitHub Actions**.
