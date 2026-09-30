@@ -199,11 +199,10 @@ git tag "$tag"
 echo "tagged $tag at $(git rev-parse --short HEAD)"
 
 if ((do_push)); then
-  git push origin "$branch"
-  git push origin "$tag"
+  git push --atomic origin "refs/heads/$branch" "refs/tags/$tag"
   echo "pushed $branch and $tag"
 else
   echo
   echo "Nothing was pushed. To publish:"
-  echo "  git push origin $branch && git push origin $tag"
+  echo "  git push --atomic origin refs/heads/$branch refs/tags/$tag"
 fi

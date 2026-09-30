@@ -65,6 +65,10 @@ jobs:
         run: |
           yq -i '.hooks.user_defines.setup.build_assets = false | .hooks.user_defines.rust_api.build_assets = false' pubspec.yaml
 
+      - name: Refresh release tags
+        if: github.ref == 'refs/heads/main'
+        run: git fetch --force origin 'refs/tags/*:refs/tags/*'
+
       - name: Verify changelog
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         run: dart run tool/changelog.dart verify
