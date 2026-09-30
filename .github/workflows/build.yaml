@@ -37,6 +37,9 @@ jobs:
       - name: Test comment density hook
         run: bash tool/check_comment_density_test.sh
 
+      - name: Test build failure summary
+        run: python3 -m unittest discover -s test/tool -p '*_test.py'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -379,6 +382,13 @@ jobs:
         if: startsWith(matrix.platform,'android')
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Setup Java
+        if: matrix.platform == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Enable git long paths (Windows)
         if: startsWith(matrix.os, 'windows')
         run: git config --global core.longpaths true
@@ -386,7 +396,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: master
+          channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
@@ -411,10 +421,20 @@ jobs:
           flutter pub get
 
       - name: Setup
+        id: package
+        shell: bash
         env:
           ANDROID_NDK_HOME: ${{ steps.build-ndk.outputs.ndk-path }}
           VPN_RSA_PRIVATE_KEY_B64: ${{ secrets.VPN_RSA_PRIVATE_KEY_B64 }}
-        run: dart setup.dart ${{ matrix.platform }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} ${{ matrix.args }} -v
+        run: |
+          set -o pipefail
+          dart setup.dart ${{ matrix.platform }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} ${{ matrix.args }} 2>&1 | tee "$RUNNER_TEMP/package-build.log"
+
+      - name: Summarize packaging failure
+        if: failure() && steps.package.outcome == 'failure'
+        env:
+          VPN_RSA_PRIVATE_KEY_B64: ${{ secrets.VPN_RSA_PRIVATE_KEY_B64 }}
+        run: python tool/summarize_build_log.py "${{ runner.temp }}/package-build.log"
 
       - name: Locate test installer
         if: ${{ !(github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) }}
@@ -424,7 +444,7 @@ jobs:
           INSTALLER_EXTENSION: ${{ matrix.platform == 'android' && 'apk' || 'exe' }}
         run: |
           shopt -s globstar nullglob
-          installers=(dist/**/*.${INSTALLER_EXTENSION})
+          installers=(dist/**/*."${INSTALLER_EXTENSION}")
           if [[ "${#installers[@]}" != 1 ]]; then
             echo "Expected exactly one .$INSTALLER_EXTENSION installer, found ${#installers[@]}." >&2
             exit 1
