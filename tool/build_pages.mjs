@@ -5,6 +5,8 @@ import { importPublicKey } from '../site/encrypt/crypto.mjs';
 export const publicFiles = [
   'index.html', 'app.mjs', 'crypto.mjs', 'style.css', 'public.pem', 'icon.png',
   'qr.mjs', 'vendor/qrcode.mjs', 'vendor/qrcode.LICENSE.txt',
+  'clients.mjs', 'vendor/incy/web.mjs', 'vendor/incy/chunk-BY42UVC3.mjs',
+  'vendor/incy/LICENSE',
 ];
 
 export async function buildPages(

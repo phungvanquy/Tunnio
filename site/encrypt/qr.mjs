@@ -1,7 +1,8 @@
 import qrcode from './vendor/qrcode.mjs';
+import { isEncryptedLink } from './clients.mjs';
 
 export function renderEncryptedQr(canvas, encrypted) {
-  if (!/^tunnio-rsa:[A-Za-z0-9_-]+$/.test(encrypted)) {
+  if (!isEncryptedLink(encrypted)) {
     throw new Error('QR codes require an encrypted subscription link.');
   }
   const code = qrcode(0, 'M');

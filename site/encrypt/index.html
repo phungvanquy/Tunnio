@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
-  <meta name="description" content="Create an encrypted subscription link for Tunnio. Encryption happens in your browser.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://crypto.happ.su/api-v2.php; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="description" content="Create subscription links for Tunnio, Happ, or INCY. Choose an app to see how your URL is handled.">
   <meta name="color-scheme" content="light dark">
   <title>Encrypt a subscription · Tunnio</title>
   <link rel="icon" href="./icon.png" type="image/png">
@@ -24,8 +24,8 @@
   <main>
     <div class="introduction">
       <span class="eyebrow">SUBSCRIPTION TOOLS</span>
-      <h1>A private link.<br>A simpler connection.</h1>
-      <p>Create an encrypted subscription link to import into Tunnio.</p>
+      <h1>Your link.<br>Your choice of app.</h1>
+      <p>Create a subscription link for Tunnio, Happ, or INCY.</p>
     </div>
 
     <section class="workspace" aria-labelledby="form-title">
@@ -34,6 +34,13 @@
         <span id="key-status" class="key-status" role="status">Loading public key…</span>
       </div>
       <form id="encrypt-form" autocomplete="off" novalidate>
+        <label for="target-app">Target app</label>
+        <select id="target-app" aria-describedby="app-hint">
+          <option value="tunnio" selected>Tunnio</option>
+          <option value="happ">Happ</option>
+          <option value="incy">INCY</option>
+        </select>
+        <p id="app-hint" class="hint">Use a Tunnio build configured with the matching key.</p>
         <label for="subscription">Subscription URL</label>
         <textarea id="subscription" rows="3" placeholder="https://your-provider.com/subscription"
           inputmode="url" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off"
@@ -43,6 +50,7 @@
           <span id="byte-count">0 bytes</span>
         </div>
         <p id="input-error" class="error" role="alert"></p>
+        <p id="privacy-note" class="delivery-note">Your URL stays in this browser. This page does not upload or store it.</p>
         <div class="actions">
           <button id="encrypt" class="primary" type="submit" disabled>Encrypt URL</button>
           <button id="clear" class="secondary" type="button">Clear</button>
@@ -56,6 +64,7 @@
         </div>
         <textarea id="encrypted-link" rows="5" readonly spellcheck="false" aria-describedby="result-hint"></textarea>
         <p id="result-hint">Paste this link into Tunnio when importing or replacing a configuration.</p>
+        <a id="open-app" class="open-app" hidden rel="noreferrer">Open app</a>
         <figure id="qr-result" class="qr-result" hidden>
           <canvas id="qr-code" width="0" height="0" role="img" aria-label="QR code of the encrypted subscription link"></canvas>
           <figcaption>Scan to copy the encrypted link to another device.</figcaption>
@@ -63,20 +72,13 @@
         <p id="qr-error" class="error" role="alert"></p>
       </section>
       <p id="status" class="status" role="status" aria-live="polite"></p>
-      <noscript><p class="error">Enable JavaScript to encrypt a URL in your browser.</p></noscript>
+      <noscript><p class="error">Enable JavaScript to create a link for your selected app.</p></noscript>
 
-      <div class="privacy-note">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-          <rect x="5" y="10" width="14" height="11" rx="3"></rect>
-          <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"></path>
-        </svg>
-        <p>Your URL stays in this browser. This page does not upload or store it.</p>
-      </div>
     </section>
 
     <div class="supporting-content">
-      <p>Made for Tunnio. Use an app build configured with the matching key.</p>
-      <details>
+      <p>Each link works only in its target app. Your subscription must provide a format that app supports; encryption does not convert configurations.</p>
+      <details id="tunnio-details">
         <summary>Encryption details</summary>
         <dl>
           <div><dt>Algorithm</dt><dd>RSA-OAEP · SHA-256</dd></div>
@@ -87,8 +89,21 @@
         </dl>
         <a href="./public.pem" download="tunnio-public.pem">Download public key</a>
       </details>
+      <details id="happ-details" hidden>
+        <summary>Happ details</summary>
+        <p>Happ receives your original URL to generate a <code>happ://crypt5/…</code> link. Its encrypted imports hide the subscription URL and restrict viewing, editing, and sharing server configurations.</p>
+        <a href="https://crypto.happ.su/" target="_blank" rel="noopener noreferrer">Official Happ generator ↗</a>
+        <a href="https://www.happ.su/main/dev-docs/crypto-link" target="_blank" rel="noopener noreferrer">Happ documentation ↗</a>
+      </details>
+      <details id="incy-details" hidden>
+        <summary>INCY details</summary>
+        <p>INCY uses <code>incy://crypt1/…</code> with AES-256-GCM and a public shared key. This conceals the URL in messages; anyone with the encoder can recover it. Use an updated INCY app.</p>
+        <p>To disable normal URL sharing and backups in INCY, your subscription server must also return <code>hide-url: 1</code>. This page cannot set that response header.</p>
+        <a href="https://docs.incy.cc/en/deep-links/" target="_blank" rel="noopener noreferrer">INCY link documentation ↗</a>
+        <a href="https://docs.incy.cc/en/app-management/#hiding-the-subscription-url-from-the-user" target="_blank" rel="noopener noreferrer">INCY URL hiding ↗</a>
+      </details>
     </div>
   </main>
-  <footer>Open source. Encrypted in your browser.</footer>
+  <footer>Subscription tools by Tunnio.</footer>
 </body>
 </html>

@@ -32,9 +32,13 @@ test('page blocks submissions and loads only local scripts and styles', async ()
   assert.match(html, /form-action 'none'/);
   assert.match(html, /default-src 'none'/);
   assert.match(html, /script-src 'self'/);
+  assert.match(html, /connect-src 'self' https:\/\/crypto\.happ\.su\/api-v2\.php;/);
   assert.doesNotMatch(html, /unsafe-inline|unsafe-eval|\son[a-z]+=/i);
-  for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
-    assert.ok(match[1].startsWith('./') || match[1] === 'https://github.com/phungvanquy/Tunnio');
+  for (const match of html.matchAll(/<(?:script|link|img)\b[^>]*(?:src|href)="([^"]+)"/g)) {
+    assert.ok(match[1].startsWith('./'));
+  }
+  for (const match of html.matchAll(/<a\b[^>]*target="_blank"[^>]*>/g)) {
+    assert.match(match[0], /rel="noopener noreferrer"/);
   }
   assert.match(html, /id="encrypt"[^>]*disabled/);
   assert.doesNotMatch(html, /<(?:input|textarea)[^>]*\bname=/);
