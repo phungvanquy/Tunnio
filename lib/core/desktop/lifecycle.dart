@@ -61,15 +61,12 @@ final class _SessionDisconnect {
 final class _TransportConnectionWaiter {
   final Completer<void> _settled = Completer<void>();
   late final StreamSubscription<DesktopTransportEvent> _subscription;
-  late final Timer _timer;
+  Timer? _timer;
   TransportConnected? _connection;
   Object? _error;
   StackTrace? _stackTrace;
 
-  _TransportConnectionWaiter(
-    Stream<DesktopTransportEvent> events,
-    Duration timeout,
-  ) {
+  _TransportConnectionWaiter(Stream<DesktopTransportEvent> events) {
     _subscription = events.listen(
       (event) {
         switch (event) {
@@ -79,46 +76,59 @@ final class _TransportConnectionWaiter {
               _settled.complete();
             }
           case TransportFailed(:final error, :final stackTrace):
-            if (!_settled.isCompleted) {
-              _error = error;
-              _stackTrace = stackTrace;
-              _settled.complete();
+            _fail(error, stackTrace);
+          case TransportDisconnected(:final generation):
+            if (_connection?.generation == generation) {
+              _fail(
+                StateError('Core disconnected during startup'),
+                StackTrace.current,
+              );
             }
-          case TransportReady() || TransportDisconnected():
+          case TransportReady():
             break;
         }
       },
       onDone: () {
-        if (!_settled.isCompleted) {
-          _error = StateError('Core transport closed before connection');
-          _stackTrace = StackTrace.current;
-          _settled.complete();
-        }
+        _fail(
+          StateError('Core transport closed during startup'),
+          StackTrace.current,
+        );
       },
     );
-    _timer = Timer(timeout, () {
-      if (!_settled.isCompleted) {
-        _error = TimeoutException(
-          'Core transport connection timed out',
-          timeout,
-        );
-        _stackTrace = StackTrace.current;
-        _settled.complete();
-      }
-    });
   }
 
-  Future<TransportConnected> get future async {
+  void _fail(Object error, StackTrace? stackTrace) {
+    _error ??= error;
+    _stackTrace ??= stackTrace;
+    if (!_settled.isCompleted) {
+      _settled.complete();
+    }
+  }
+
+  Future<TransportConnected> wait(Duration timeout) async {
+    if (!_settled.isCompleted) {
+      _timer = Timer(timeout, () {
+        _fail(
+          TimeoutException('Core transport connection timed out', timeout),
+          StackTrace.current,
+        );
+      });
+    }
     await _settled.future;
+    _timer?.cancel();
+    throwIfFailed();
+    return _connection!;
+  }
+
+  void throwIfFailed() {
     final error = _error;
     if (error != null) {
       Error.throwWithStackTrace(error, _stackTrace ?? StackTrace.current);
     }
-    return _connection!;
   }
 
   Future<void> cancel() async {
-    _timer.cancel();
+    _timer?.cancel();
     await _subscription.cancel();
   }
 }
@@ -403,10 +413,7 @@ final class DesktopCoreLifecycle implements DesktopCoreLifecycleController {
       if (!_wantsRunning) {
         return false;
       }
-      connectionWaiter = _TransportConnectionWaiter(
-        _transport.events,
-        timeouts.connection,
-      );
+      connectionWaiter = _TransportConnectionWaiter(_transport.events);
       lease = await launcher.start(
         sessionId: sessionId,
         address: _transport.address,
@@ -425,11 +432,15 @@ final class DesktopCoreLifecycle implements DesktopCoreLifecycleController {
         return false;
       }
       final connected = await _waitForConnectionWhileWanted(
-        connectionWaiter.future,
+        connectionWaiter.wait(timeouts.connection),
       );
       if (connected == null || !_wantsRunning) {
         await releaseLease();
         return false;
+      }
+      connectionWaiter.throwIfFailed();
+      if (_transport.state != DesktopTransportState.connected) {
+        throw StateError('Core transport disconnected during startup');
       }
       if (verifyPeerPid && connected.pid != lease.pid) {
         await releaseLease();

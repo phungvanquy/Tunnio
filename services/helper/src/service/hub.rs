@@ -106,19 +106,25 @@ struct ManagedCore {
     session_id: String,
     child: Child,
     #[cfg(windows)]
-    _job: CoreJob,
+    _job: Option<CoreJob>,
 }
 
 impl ManagedCore {
-    fn adopt(session_id: String, child: Child) -> Result<Self, Error> {
-        #[cfg(windows)]
-        let job = CoreJob::bind(&child)?;
-        Ok(Self {
+    fn new(session_id: String, child: Child) -> Self {
+        Self {
             session_id,
             child,
             #[cfg(windows)]
-            _job: job,
-        })
+            _job: None,
+        }
+    }
+
+    fn confine(&mut self) -> Result<(), Error> {
+        #[cfg(windows)]
+        {
+            self._job = Some(CoreJob::bind(&self.child)?);
+        }
+        Ok(())
     }
 
     fn terminate(&mut self) -> Result<(), Error> {
@@ -358,6 +364,31 @@ fn release_managed_core(managed: &mut Option<ManagedCore>) -> Result<(), Error> 
     Ok(())
 }
 
+fn confine_managed_core(
+    managed: &mut Option<ManagedCore>,
+    bind: impl FnOnce(&mut ManagedCore) -> Result<(), Error>,
+) -> Result<(), warp::reply::Response> {
+    let Some(core) = managed.as_mut() else {
+        return Ok(());
+    };
+    if let Err(error) = bind(core) {
+        log_message(format!("Helper could not confine the Core: {error}"));
+        if let Err(stop_error) = release_managed_core(managed) {
+            return Err(error_response(
+                "coreStopFailed",
+                format!("Core confinement failed: {error}; cleanup failed: {stop_error}"),
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ));
+        }
+        return Err(error_response(
+            "internalError",
+            format!("Core confinement failed: {error}"),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        ));
+    }
+    Ok(())
+}
+
 fn json_response<T: Serialize>(value: &T, status: StatusCode) -> warp::reply::Response {
     warp::reply::with_status(warp::reply::json(value), status).into_response()
 }
@@ -435,9 +466,12 @@ fn start(start_params: StartParams) -> warp::reply::Response {
     }
 
     match core.spawn(&start_params.address) {
-        Ok(mut child) => {
+        Ok(child) => {
             let process_id = child.id();
-            if let Some(stderr) = child.stderr.take() {
+            let mut owned_core = ManagedCore::new(start_params.session_id.clone(), child);
+            let stderr = owned_core.child.stderr.take();
+            *managed = Some(owned_core);
+            if let Some(stderr) = stderr {
                 let reader = io::BufReader::new(stderr);
                 thread::spawn(move || {
                     for line in reader.lines() {
@@ -452,17 +486,9 @@ fn start(start_params: StartParams) -> warp::reply::Response {
                     }
                 });
             }
-            *managed = match ManagedCore::adopt(start_params.session_id.clone(), child) {
-                Ok(core) => Some(core),
-                Err(error) => {
-                    log_message(format!("Helper could not confine the Core: {error}"));
-                    return error_response(
-                        "internalError",
-                        format!("Core confinement failed: {error}"),
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                    );
-                }
-            };
+            if let Err(response) = confine_managed_core(&mut managed, ManagedCore::confine) {
+                return response;
+            }
             json_response(
                 &StartResponse {
                     session_id: start_params.session_id,
@@ -804,8 +830,10 @@ mod tests {
     }
 
     fn adopt_core(session_id: &str) {
-        *lock_surviving_poison(&MANAGED_CORE) =
-            Some(ManagedCore::adopt(session_id.to_string(), spawn_running_core()).unwrap());
+        *lock_surviving_poison(&MANAGED_CORE) = Some(ManagedCore::new(
+            session_id.to_string(),
+            spawn_running_core(),
+        ));
     }
 
     #[test]
@@ -1009,13 +1037,10 @@ mod tests {
     #[allow(clippy::await_holding_lock)]
     async fn start_releases_the_managed_core_before_rejecting_an_unverified_core() {
         let _state = lock_process_state();
-        *lock_surviving_poison(&MANAGED_CORE) = Some(
-            ManagedCore::adopt(
-                "fedcba9876543210fedcba9876543210".to_string(),
-                spawn_placeholder_core(),
-            )
-            .unwrap(),
-        );
+        *lock_surviving_poison(&MANAGED_CORE) = Some(ManagedCore::new(
+            "fedcba9876543210fedcba9876543210".to_string(),
+            spawn_placeholder_core(),
+        ));
 
         let response = warp::test::request()
             .method("POST")
@@ -1103,13 +1128,12 @@ mod tests {
     fn terminate_lets_the_core_exit_on_its_own_before_killing_it() {
         use std::os::unix::process::ExitStatusExt;
 
-        let mut core = ManagedCore::adopt(
+        let mut core = ManagedCore::new(
             "0123456789abcdef0123456789abcdef".to_string(),
             spawn_shell_core_once_ready(
                 "trap 'exit 0' TERM; echo ready; while :; do sleep 0.05; done",
             ),
-        )
-        .unwrap();
+        );
 
         core.terminate().unwrap();
 
@@ -1123,11 +1147,10 @@ mod tests {
     fn terminate_kills_a_core_that_ignores_the_exit_request() {
         use std::os::unix::process::ExitStatusExt;
 
-        let mut core = ManagedCore::adopt(
+        let mut core = ManagedCore::new(
             "0123456789abcdef0123456789abcdef".to_string(),
             spawn_shell_core_once_ready("trap '' TERM; echo ready; exec sleep 30"),
-        )
-        .unwrap();
+        );
 
         core.terminate().unwrap();
 
@@ -1138,11 +1161,11 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn closing_the_job_takes_the_core_down_with_the_helper() {
-        let core = ManagedCore::adopt(
+        let mut core = ManagedCore::new(
             "0123456789abcdef0123456789abcdef".to_string(),
             spawn_running_core(),
-        )
-        .unwrap();
+        );
+        core.confine().unwrap();
         let ManagedCore {
             mut child, _job, ..
         } = core;
@@ -1158,18 +1181,59 @@ mod tests {
 
     #[test]
     fn terminate_confirms_the_exit_of_a_running_core() {
-        let mut managed = Some(
-            ManagedCore::adopt(
-                "0123456789abcdef0123456789abcdef".to_string(),
-                spawn_running_core(),
-            )
-            .unwrap(),
-        );
+        let mut managed = Some(ManagedCore::new(
+            "0123456789abcdef0123456789abcdef".to_string(),
+            spawn_running_core(),
+        ));
 
         release_managed_core(&mut managed).unwrap();
 
         assert!(managed.is_none());
         assert!(release_managed_core(&mut managed).is_ok());
+    }
+
+    #[tokio::test]
+    async fn confinement_failure_releases_the_spawned_core() {
+        let mut managed = Some(ManagedCore::new(
+            "0123456789abcdef0123456789abcdef".to_string(),
+            spawn_running_core(),
+        ));
+        let response = confine_managed_core(&mut managed, |core| {
+            assert!(core.child.try_wait()?.is_none());
+            Err(Error::other("job assignment refused"))
+        })
+        .unwrap_err();
+
+        assert!(managed.is_none());
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        let body: serde_json::Value = serde_json::from_slice(
+            &warp::hyper::body::to_bytes(response.into_body())
+                .await
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(body["code"], "internalError");
+        assert!(body["message"]
+            .as_str()
+            .unwrap()
+            .contains("job assignment refused"));
+    }
+
+    #[test]
+    fn successful_confinement_keeps_session_ownership() {
+        let session_id = "0123456789abcdef0123456789abcdef";
+        let mut managed = Some(ManagedCore::new(
+            session_id.to_string(),
+            spawn_running_core(),
+        ));
+        let process_id = managed.as_ref().unwrap().child.id();
+
+        assert!(confine_managed_core(&mut managed, ManagedCore::confine).is_ok());
+        let core = managed.as_mut().unwrap();
+        assert_eq!(core.session_id, session_id);
+        assert_eq!(core.child.id(), process_id);
+        assert!(core.child.try_wait().unwrap().is_none());
+        release_managed_core(&mut managed).unwrap();
     }
 
     #[tokio::test]

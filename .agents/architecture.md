@@ -104,6 +104,8 @@ caller, and uses a three-second watchdog as an emergency application-exit path. 
 - Startup opens or replaces the IPC transport, resolves a launcher, generates a 128-bit lowercase hexadecimal session ID,
   launches Core, and waits for the matching connection. Windows additionally verifies that the named-pipe peer PID equals
   the process PID returned by the Helper lease.
+- Startup observes IPC before launch but starts the connection deadline only after the launcher returns. An early
+  connection remains provisional: a matching disconnect or transport failure invalidates it until running is published.
 - Each running session retains its process owner, lease, PID, session ID, and transport connection generation. Stop waits
   for both process-exit confirmation and the matching disconnect generation; a missing disconnect replaces the transport
   before later starts.
@@ -115,6 +117,15 @@ caller, and uses a three-second watchdog as an emergency application-exit path. 
 
 Direct launch is used on macOS, inside an AppImage, and as the Windows/Linux fallback when the privileged Helper is not
 ready. When the Helper is ready, it owns the Core child and Dart owns it through a session-scoped lease.
+
+The Helper records ownership before Windows job assignment. Failed confinement terminates and reaps that child;
+unconfirmed cleanup retains ownership and returns `coreStopFailed`.
+
+The Windows installer sends `com.follow.clash.shutdown` to the selected installation's runner and waits for process exit
+before removing the Helper or saved data. The runner buffers requests until the Windows-only lifecycle channel is ready;
+`WindowManager` forwards them to `SystemAction.handleExit`, regardless of minimize-on-close preferences. Shutdown failure
+aborts installation/removal instead of killing processes by image name. Older versions that cannot handle this request
+must be exited from their tray menu before upgrade. Process discovery uses local WMI; discovery failure also aborts.
 
 ### Android Service Lifecycle
 

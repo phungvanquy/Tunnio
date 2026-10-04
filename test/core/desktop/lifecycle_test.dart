@@ -699,34 +699,125 @@ void main() {
     await lifecycle.close();
   });
 
-  test(
-    'connection timeout while launcher is pending is handled once',
-    () async {
+  test('connection timeout after a slow launch is handled once', () async {
+    final transport = FakeDesktopCoreTransport();
+    final launcher = FakeLauncher(owner: CoreProcessOwner.direct, pid: 42)
+      ..startGate = Completer<void>();
+    final lifecycle = DesktopCoreLifecycle(
+      transportFactory: () => transport,
+      launcherResolver: MutableLauncherResolver(launcher),
+      sessionIdFactory: () => _sessionId,
+      timeouts: const DesktopCoreTimeouts(
+        ready: Duration(seconds: 1),
+        connection: Duration(milliseconds: 10),
+        disconnection: Duration(seconds: 1),
+      ),
+    );
+
+    final start = lifecycle.start();
+    transport.ready();
+    await launcher.started;
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    launcher.startGate!.complete();
+
+    await expectLater(start, throwsA(isA<DesktopCoreFailure>()));
+    expect(launcher.lease.stopCount, 1);
+    await lifecycle.close();
+  });
+
+  for (final connectBeforeLaunchReturns in [true, false]) {
+    test('slow launch leaves a full connection deadline '
+        '(early connection: $connectBeforeLaunchReturns)', () async {
       final transport = FakeDesktopCoreTransport();
-      final launcher = FakeLauncher(owner: CoreProcessOwner.direct, pid: 42)
+      final launcher = FakeLauncher(owner: CoreProcessOwner.helper, pid: 42)
         ..startGate = Completer<void>();
       final lifecycle = DesktopCoreLifecycle(
         transportFactory: () => transport,
         launcherResolver: MutableLauncherResolver(launcher),
         sessionIdFactory: () => _sessionId,
+        verifyPeerPid: true,
         timeouts: const DesktopCoreTimeouts(
-          ready: Duration(seconds: 1),
-          connection: Duration(milliseconds: 10),
-          disconnection: Duration(seconds: 1),
+          connection: Duration(milliseconds: 30),
         ),
       );
 
       final start = lifecycle.start();
       transport.ready();
       await launcher.started;
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      if (connectBeforeLaunchReturns) {
+        transport.connect(pid: 42);
+        await pumpEventQueue();
+      }
+      launcher.startGate!.complete();
+      if (!connectBeforeLaunchReturns) {
+        await pumpEventQueue();
+        transport.connect(pid: 42);
+      }
+
+      expect((await start).session?.pid, 42);
+      expect(lifecycle.state, isA<DesktopCoreRunning>());
+      expect(launcher.lease.stopCount, 0);
+      await _closeRunning(lifecycle, transport, launcher.lease, 1);
+    });
+  }
+
+  for (final failure in ['disconnect', 'transport failure', 'closed stream']) {
+    test('rejects an early connection followed by $failure', () async {
+      final transport = FakeDesktopCoreTransport();
+      final launcher = FakeLauncher(owner: CoreProcessOwner.helper, pid: 42)
+        ..startGate = Completer<void>();
+      final lifecycle = _createLifecycle(
+        transport: transport,
+        resolver: MutableLauncherResolver(launcher),
+      );
+      final states = <DesktopCoreState>[];
+      final subscription = lifecycle.states.listen(states.add);
+      final start = lifecycle.start();
+      final assertion = expectLater(start, throwsA(_hasCode('start_failed')));
+      transport.ready();
+      await launcher.started;
+      transport.connect(pid: 42);
+      await pumpEventQueue();
+      switch (failure) {
+        case 'disconnect':
+          transport.disconnect(1);
+        case 'transport failure':
+          transport.fail(StateError('IPC failed'));
+        case 'closed stream':
+          await transport.close();
+      }
+      await pumpEventQueue();
       launcher.startGate!.complete();
 
-      await expectLater(start, throwsA(isA<DesktopCoreFailure>()));
+      await assertion;
+      await pumpEventQueue();
+      expect(states.whereType<DesktopCoreRunning>(), isEmpty);
       expect(launcher.lease.stopCount, 1);
       await lifecycle.close();
-    },
-  );
+      await subscription.cancel();
+    });
+  }
+
+  test('stale disconnect does not invalidate an early connection', () async {
+    final transport = FakeDesktopCoreTransport();
+    final launcher = FakeLauncher(owner: CoreProcessOwner.helper, pid: 42)
+      ..startGate = Completer<void>();
+    final lifecycle = _createLifecycle(
+      transport: transport,
+      resolver: MutableLauncherResolver(launcher),
+    );
+    final start = lifecycle.start();
+    transport.ready();
+    await launcher.started;
+    transport.connect(pid: 42, generation: 2);
+    transport.disconnect(1);
+    await pumpEventQueue();
+    launcher.startGate!.complete();
+
+    expect((await start).session?.connectionGeneration, 2);
+    await _closeRunning(lifecycle, transport, launcher.lease, 2);
+  });
 }
 
 Matcher _hasCode(String code) {
