@@ -3,6 +3,7 @@ Set-StrictMode -Version Latest
 if ($env:GITHUB_ACTIONS -ne 'true' -or -not $IsWindows) {
     throw 'Run this installer test only on a disposable Windows Actions runner.'
 }
+. "$PSScriptRoot/windows_installer_readiness.ps1"
 
 $installers = @(Get-ChildItem dist -Recurse -Filter '*.exe' -File)
 if ($installers.Count -ne 1) { throw "Expected one installer, found $($installers.Count)." }
@@ -17,6 +18,17 @@ $userKey = "Registry::HKEY_USERS\$profileId"
 $fixtureName = 'Software\TunnioUninstallFixture-' + [guid]::NewGuid()
 $fixtureKey = "HKCU:\$fixtureName"
 $hiveLoaded = $false
+$appProcess = $null
+$unrelatedProcess = $null
+$blockedProcess = $null
+$internetKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+$internetSettings = Get-Item -LiteralPath $internetKey
+$savedProxySettings = @{}
+foreach ($name in @('ProxyEnable', 'ProxyServer')) {
+    if ($internetSettings.GetValueNames() -contains $name) {
+        $savedProxySettings[$name] = @($internetSettings.GetValue($name), $internetSettings.GetValueKind($name))
+    }
+}
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $approvedKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'
 $protocolKeys = @('flclash', 'clashmeta', 'tunnio', 'clash') | ForEach-Object { "HKCU:\Software\Classes\$_" }
@@ -28,6 +40,7 @@ $bases = @(
     $redirected
 )
 $dataDirectories = @($bases | ForEach-Object { Join-Path $_ 'com.follow\clash' })
+$preferencePaths = @($dataDirectories[0..1] | ForEach-Object { Join-Path $_ 'shared_preferences.json' })
 foreach ($path in @($dataDirectories) + @($protocolKeys) + @($profileKey, $userKey)) {
     if (Test-Path -LiteralPath $path) { throw "Test requires an unused path: $path" }
 }
@@ -39,6 +52,55 @@ function Invoke-Installer([string] $Executable, [string[]] $Arguments) {
     $process = Start-Process -FilePath $Executable -ArgumentList $Arguments -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw "Installer exited with $($process.ExitCode)." }
 }
+
+function Set-TestRegistrations([string] $Executable) {
+    foreach ($key in $protocolKeys) {
+        New-Item -Path "$key\shell\open\command" -Force | Out-Null
+        $owner = if ($key.EndsWith('\clash')) { 'C:\OtherApp\Other.exe' } else { $Executable }
+        Set-Item -Path "$key\shell\open\command" -Value "`"$owner`" `"%1`""
+    }
+    if (-not (Test-Path -LiteralPath $runKey)) { New-Item -Path $runKey -Force | Out-Null }
+    New-ItemProperty -Path $runKey -Name FlClash -Value $Executable -Force | Out-Null
+    New-Item -Path $approvedKey -Force | Out-Null
+    New-ItemProperty -Path $approvedKey -Name FlClash -PropertyType Binary -Value ([byte[]](2, 0, 0, 0)) -Force | Out-Null
+}
+
+function Start-TestApp([string] $Executable) {
+    # Empty-profile startup persists sharedState after Core initialization on Windows; BootGuard is Android-only.
+    Reset-AppReadiness $preferencePaths
+    $script:appProcess = Start-Process -FilePath $Executable -PassThru
+    Wait-AppReady $script:appProcess $preferencePaths
+    New-ItemProperty -Path $internetKey -Name ProxyServer -PropertyType String -Value '127.0.0.1:7890' -Force | Out-Null
+    New-ItemProperty -Path $internetKey -Name ProxyEnable -PropertyType DWord -Value 1 -Force | Out-Null
+    [InstallerProxyFixture]::Refresh()
+}
+
+function Assert-AppStopped {
+    if (-not $script:appProcess.WaitForExit(5000)) { throw 'The installer left the app running.' }
+    if ($script:appProcess.ExitCode -ne 0) { throw 'The app did not exit cleanly.' }
+    if ((Get-ItemPropertyValue -LiteralPath $internetKey -Name ProxyEnable) -ne 0) {
+        throw 'Application exit left the system proxy enabled.'
+    }
+    if ($unrelatedProcess.HasExited) { throw 'The installer killed another installation with the same image name.' }
+}
+
+function Start-BlockingApp([string] $Path) {
+    Copy-Item -LiteralPath "$env:SystemRoot\System32\PING.EXE" -Destination $Path -Force
+    return Start-Process -FilePath $Path -ArgumentList @('-n', '600', '127.0.0.1') -WindowStyle Hidden -PassThru
+}
+
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class InstallerProxyFixture {
+    [DllImport("wininet.dll", SetLastError = true)]
+    private static extern bool InternetSetOption(IntPtr handle, int option, IntPtr buffer, int size);
+    public static void Refresh() {
+        InternetSetOption(IntPtr.Zero, 39, IntPtr.Zero, 0);
+        InternetSetOption(IntPtr.Zero, 37, IntPtr.Zero, 0);
+    }
+}
+'@
 
 try {
     New-Item -ItemType Directory -Path $scratch, $outside -Force | Out-Null
@@ -58,6 +120,16 @@ try {
         New-Item -ItemType Directory -Path (Join-Path $path 'profiles\generations') -Force | Out-Null
         Set-Content -LiteralPath (Join-Path $path 'profiles\generations\saved.yaml') -Value 'saved profile'
     }
+    $config = @{
+        appSettingProps = @{ silentLaunch = $true; minimizeOnExit = $true; autoCheckUpdate = $false }
+        networkProps = @{ systemProxy = $false }
+        patchClashConfig = @{ tun = @{ enable = $false } }
+    } | ConvertTo-Json -Depth 8 -Compress
+    foreach ($directory in $dataDirectories[0..1]) {
+        @{ 'flutter.config' = $config } | ConvertTo-Json -Compress |
+            Set-Content -LiteralPath (Join-Path $directory 'shared_preferences.json')
+    }
+    $unrelatedProcess = Start-BlockingApp (Join-Path $outside 'Tunnio.exe')
     $sibling = Join-Path $bases[0] 'com.follow\OtherApp'
     New-Item -ItemType Directory -Path $sibling -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $sibling 'keep.txt') -Value 'other app'
@@ -73,17 +145,23 @@ try {
     & reg.exe load "HKU\$profileId" $hiveFile
     if ($LASTEXITCODE -ne 0) { throw 'Could not load the isolated test registry hive.' }
     $hiveLoaded = $true
-    foreach ($key in $protocolKeys) {
-        New-Item -Path "$key\shell\open\command" -Force | Out-Null
-        $owner = if ($key.EndsWith('\clash')) { 'C:\OtherApp\Other.exe' } else { $legacyExecutable }
-        Set-Item -Path "$key\shell\open\command" -Value "`"$owner`" `"%1`""
-    }
-    if (-not (Test-Path -LiteralPath $runKey)) { New-Item -Path $runKey -Force | Out-Null }
-    New-ItemProperty -Path $runKey -Name FlClash -Value $legacyExecutable | Out-Null
-    New-Item -Path $approvedKey -Force | Out-Null
-    New-ItemProperty -Path $approvedKey -Name FlClash -PropertyType Binary -Value ([byte[]](2, 0, 0, 0)) | Out-Null
 
+    $blockedProcess = Start-BlockingApp $legacyExecutable
+    $refusedUpgrade = Start-Process -FilePath $installers[0].FullName -ArgumentList $arguments -Wait -PassThru
+    if ($refusedUpgrade.ExitCode -eq 0) { throw 'Upgrade ignored an app that could not shut down.' }
+    if ($blockedProcess.HasExited) { throw 'Upgrade force-killed an unresponsive app.' }
+    foreach ($path in $dataDirectories) {
+        if (-not (Test-Path (Join-Path $path 'profiles\generations\saved.yaml'))) {
+            throw "Aborted upgrade deleted saved data: $path"
+        }
+    }
+    Stop-Process -Id $blockedProcess.Id -Force
+    $blockedProcess.WaitForExit()
+    Copy-Item -LiteralPath $executable -Destination $legacyExecutable -Force
+    Start-TestApp $executable
+    Set-TestRegistrations $legacyExecutable
     Invoke-Installer $installers[0].FullName $arguments
+    Assert-AppStopped
     if ((Get-ItemPropertyValue -LiteralPath $runKey -Name FlClash) -ne $executable) {
         throw 'Upgrade did not migrate the startup executable.'
     }
@@ -102,7 +180,22 @@ try {
     }
     $uninstaller = @(Get-ChildItem -LiteralPath $installation -Filter 'unins*.exe')
     if ($uninstaller.Count -ne 1) { throw 'Expected one uninstaller.' }
+    $blockedProcess = Start-BlockingApp $legacyExecutable
+    $refusedUninstall = Start-Process -FilePath $uninstaller[0].FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART') -Wait -PassThru
+    if ($blockedProcess.HasExited) { throw 'Uninstall force-killed an unresponsive app.' }
+    if (-not (Test-Path -LiteralPath $executable)) { throw 'Aborted uninstall removed the executable.' }
+    foreach ($path in $dataDirectories) {
+        if (-not (Test-Path (Join-Path $path 'profiles\generations\saved.yaml'))) {
+            throw "Aborted uninstall deleted saved data: $path"
+        }
+    }
+    Stop-Process -Id $blockedProcess.Id -Force
+    $blockedProcess.WaitForExit()
+    Remove-Item -LiteralPath $legacyExecutable
+    Start-TestApp $executable
+    Set-TestRegistrations $executable
     Invoke-Installer $uninstaller[0].FullName @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/LOG=`"$scratch\uninstall.log`"")
+    Assert-AppStopped
     foreach ($path in $dataDirectories) {
         if (Test-Path -LiteralPath $path) { throw "Uninstall retained app data: $path" }
     }
@@ -118,9 +211,24 @@ try {
             throw "Uninstall retained startup registration: $key"
         }
     }
-    Write-Output 'Windows install, upgrade preservation, and uninstall cleanup passed.'
+    Write-Output 'Windows install, graceful shutdown, proxy cleanup, upgrade preservation, and uninstall cleanup passed.'
 }
 finally {
+    foreach ($process in @($appProcess, $unrelatedProcess, $blockedProcess)) {
+        if ($null -ne $process -and -not $process.HasExited) {
+            Stop-Process -Id $process.Id -Force
+            $process.WaitForExit()
+        }
+    }
+    foreach ($name in @('ProxyEnable', 'ProxyServer')) {
+        if ($savedProxySettings.ContainsKey($name)) {
+            $setting = $savedProxySettings[$name]
+            New-ItemProperty -Path $internetKey -Name $name -Value $setting[0] -PropertyType $setting[1] -Force | Out-Null
+        } else {
+            Remove-ItemProperty -LiteralPath $internetKey -Name $name -ErrorAction SilentlyContinue
+        }
+    }
+    [InstallerProxyFixture]::Refresh()
     if ($hiveLoaded) {
         & reg.exe unload "HKU\$profileId"
         if ($LASTEXITCODE -ne 0) { Write-Warning 'Could not unload the isolated test registry hive.' }

@@ -8,6 +8,8 @@ AppSupportURL={{PUBLISHER_URL}}
 AppUpdatesURL={{PUBLISHER_URL}}
 DefaultDirName={{INSTALL_DIR_NAME}}
 UsePreviousAppDir=yes
+CloseApplications=no
+RestartApplications=no
 DisableProgramGroupPage=yes
 OutputDir=.
 OutputBaseFilename={{OUTPUT_BASE_FILENAME}}
@@ -20,40 +22,130 @@ ArchitecturesAllowed={{ARCH}}
 ArchitecturesInstallIn64BitMode={{ARCH}}
 
 [Code]
-procedure KillProcesses;
-var
-  Processes: TArrayOfString;
-  i: Integer;
-  ResultCode: Integer;
-begin
-  Processes := ['Tunnio.exe', 'TunnioCore.exe', 'TunnioHelperService.exe',
-    'FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe'];
+function OpenAppProcess(Access: Cardinal; Inherit: Boolean; ProcessId: Cardinal): THandle;
+  external 'OpenProcess@kernel32.dll stdcall';
 
-  for i := 0 to GetArrayLength(Processes)-1 do
+function QueryAppPath(Process: THandle; Flags: Cardinal; Path: String; var Size: Cardinal): Boolean;
+  external 'QueryFullProcessImageNameW@kernel32.dll stdcall';
+
+function WaitForApp(Process: THandle; Milliseconds: Cardinal): Cardinal;
+  external 'WaitForSingleObject@kernel32.dll stdcall';
+
+function CloseAppHandle(Handle: THandle): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
+
+function FindAppWindow(Parent, After: HWND; ClassName: String; WindowName: THandle): HWND;
+  external 'FindWindowExW@user32.dll stdcall';
+
+function AppWindowProcess(Window: HWND; var ProcessId: Cardinal): Cardinal;
+  external 'GetWindowThreadProcessId@user32.dll stdcall';
+
+function ShutdownAppProcess(ProcessId: Cardinal): Boolean;
+var
+  Process: THandle;
+  Path: String;
+  Size, WindowProcessId, ShutdownMessage, WaitResult: Cardinal;
+  Window: HWND;
+  Attempt: Integer;
+begin
+  Result := False;
+  Process := OpenAppProcess($00101000, False, ProcessId);
+  if Process = 0 then
   begin
-    Exec('taskkill', '/f /im ' + Processes[i], '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Result := DLLGetLastError = 87;
+    Exit;
+  end;
+  try
+    Size := 32768;
+    SetLength(Path, Size);
+    if not QueryAppPath(Process, 0, Path, Size) then
+    begin
+      Result := WaitForApp(Process, 0) = 0;
+      Exit;
+    end;
+    SetLength(Path, Size);
+    if (CompareText(Path, ExpandConstant('{app}\Tunnio.exe')) <> 0) and
+      (CompareText(Path, ExpandConstant('{app}\FlClash.exe')) <> 0) then
+    begin
+      Result := True;
+      Exit;
+    end;
+    ShutdownMessage := RegisterWindowMessage('com.follow.clash.shutdown');
+    if ShutdownMessage = 0 then Exit;
+    Log('Requesting application exit: ' + Path);
+    for Attempt := 1 to 100 do
+    begin
+      WaitResult := WaitForApp(Process, 100);
+      if WaitResult <> $102 then
+      begin
+        Result := WaitResult = 0;
+        Exit;
+      end;
+      Window := FindAppWindow(0, 0, 'FLUTTER_RUNNER_WIN32_WINDOW', 0);
+      while Window <> 0 do
+      begin
+        AppWindowProcess(Window, WindowProcessId);
+        if WindowProcessId = ProcessId then
+          PostMessage(Window, ShutdownMessage, 0, 0);
+        Window := FindAppWindow(0, Window, 'FLUTTER_RUNNER_WIN32_WINDOW', 0);
+      end;
+    end;
+    Result := WaitForApp(Process, 0) = 0;
+  finally
+    CloseAppHandle(Process);
   end;
 end;
 
-procedure UnregisterHelperService;
+function ShutdownApplications: Boolean;
+var
+  Locator, Services, Processes, Process: Variant;
+  I: Integer;
+begin
+  Result := False;
+  try
+    Locator := CreateOleObject('WbemScripting.SWbemLocator');
+    Services := Locator.ConnectServer('.', 'root\CIMV2');
+    Processes := Services.ExecQuery(
+      'SELECT ProcessId FROM Win32_Process WHERE Name = ''Tunnio.exe'' OR Name = ''FlClash.exe''');
+    for I := 0 to Processes.Count - 1 do
+    begin
+      Process := Processes.ItemIndex(I);
+      if not ShutdownAppProcess(Process.ProcessId) then Exit;
+    end;
+    Result := True;
+  except
+    Log('Could not check running applications: ' + GetExceptionMessage);
+  end;
+end;
+
+function UnregisterHelperService: String;
 var
   HelperPath: String;
   ResultCode: Integer;
 begin
-  HelperPath := ExpandConstant('{app}\\TunnioHelperService.exe');
+  Result := '';
+  HelperPath := ExpandConstant('{app}\TunnioHelperService.exe');
   if not FileExists(HelperPath) then
-    HelperPath := ExpandConstant('{app}\\FlClashHelperService.exe');
+    HelperPath := ExpandConstant('{app}\FlClashHelperService.exe');
   if FileExists(HelperPath) then
   begin
-    Exec(HelperPath, 'uninstall', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    if not Exec(HelperPath, 'uninstall', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or
+      (ResultCode <> 0) then
+    begin
+      Log(Format('Helper uninstall failed: %d', [ResultCode]));
+      Result := FmtMessage(SetupMessage(msgErrorExecutingProgram), [HelperPath]);
+    end;
   end;
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
-  UnregisterHelperService;
-  KillProcesses;
-  Result := '';
+  if not ShutdownApplications then
+  begin
+    Result := FmtMessage(SetupMessage(msgSetupAppRunningError), ['Tunnio']);
+    Exit;
+  end;
+  Result := UnregisterHelperService;
 end;
 
 function ExpandEnvironmentStrings(Source: String; Destination: String; Size: Cardinal): Cardinal;
@@ -198,11 +290,20 @@ begin
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  Error: String;
 begin
   if CurUninstallStep = usUninstall then
   begin
-    UnregisterHelperService;
-    KillProcesses;
+    if not ShutdownApplications then
+      Error := FmtMessage(SetupMessage(msgUninstallAppRunningError), ['Tunnio'])
+    else
+      Error := UnregisterHelperService;
+    if Error <> '' then
+    begin
+      SuppressibleMsgBox(Error, mbError, MB_OK, IDOK);
+      Abort;
+    end;
     RemoveSavedData;
   end;
 end;

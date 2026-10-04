@@ -3,6 +3,7 @@ import 'dart:ui' show ClipOp;
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/launch.dart';
+import 'package:fl_clash/common/windows_lifecycle.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/config.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -26,6 +27,7 @@ class _WindowContainerState extends ConsumerState<WindowManager>
     with WindowListener {
   Timer? _windowGeometryTimer;
   int _windowGeometryRevision = 0;
+  final _windowsLifecycle = system.isWindows ? WindowsLifecycle() : null;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +48,10 @@ class _WindowContainerState extends ConsumerState<WindowManager>
       }
     });
     windowManager.addListener(this);
+    final windowsLifecycle = _windowsLifecycle;
+    if (windowsLifecycle != null) {
+      unawaited(windowsLifecycle.initialize(onWindowShouldTerminate));
+    }
   }
 
   @override
@@ -186,6 +192,7 @@ class _WindowContainerState extends ConsumerState<WindowManager>
   @override
   void dispose() {
     _invalidateWindowGeometryCapture();
+    _windowsLifecycle?.dispose();
     windowManager.removeListener(this);
     super.dispose();
   }
