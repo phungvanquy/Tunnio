@@ -284,6 +284,11 @@ an installed release.
 `v*` tag pushes also build Linux AMD64 and publish a release/prerelease. Pull
 requests trigger nothing.
 
+Tagged package builds check that the checkout matches the workflow commit and clear
+Flutter, native hook, Core, Helper, Rust, and distribution outputs before resolving
+dependencies. Release packages and checksums are assembled only from that workflow
+run's artifacts.
+
 GitHub-hosted CI checks out a pushed revision; it cannot see uncommitted local
 changes. Run the verification commands above before committing. To test on
 GitHub before merging, commit and push a temporary branch; its push starts the

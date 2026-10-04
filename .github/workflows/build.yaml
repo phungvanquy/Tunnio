@@ -424,6 +424,15 @@ jobs:
           add-to-path: true
           link-to-sdk: true
 
+      - name: Clean release build outputs
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git submodule status --recursive
+          flutter clean
+          rm -rf .dart_tool build libclash dist services/helper/target plugins/rust_api/rust/target
+
       - name: Get Flutter Dependency
         run: |
           flutter --version
