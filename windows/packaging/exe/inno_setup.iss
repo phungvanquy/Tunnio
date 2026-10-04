@@ -34,7 +34,7 @@ function WaitForApp(Process: THandle; Milliseconds: Cardinal): Cardinal;
 function CloseAppHandle(Handle: THandle): Boolean;
   external 'CloseHandle@kernel32.dll stdcall';
 
-function FindAppWindow(Parent, After: HWND; ClassName: String; WindowName: NativeUInt): HWND;
+function FindAppWindow(Parent, After: HWND; ClassName: String; WindowName: THandle): HWND;
   external 'FindWindowExW@user32.dll stdcall';
 
 function AppWindowProcess(Window: HWND; var ProcessId: Cardinal): Cardinal;
