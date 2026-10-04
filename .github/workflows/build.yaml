@@ -276,6 +276,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Test Windows installer readiness checks
+        shell: pwsh
+        run: ./test/tool/windows_installer_readiness_test.ps1
+
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
         with:

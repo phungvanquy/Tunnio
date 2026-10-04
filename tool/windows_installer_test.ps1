@@ -3,6 +3,7 @@ Set-StrictMode -Version Latest
 if ($env:GITHUB_ACTIONS -ne 'true' -or -not $IsWindows) {
     throw 'Run this installer test only on a disposable Windows Actions runner.'
 }
+. "$PSScriptRoot/windows_installer_readiness.ps1"
 
 $installers = @(Get-ChildItem dist -Recurse -Filter '*.exe' -File)
 if ($installers.Count -ne 1) { throw "Expected one installer, found $($installers.Count)." }
@@ -39,6 +40,7 @@ $bases = @(
     $redirected
 )
 $dataDirectories = @($bases | ForEach-Object { Join-Path $_ 'com.follow\clash' })
+$preferencePaths = @($dataDirectories[0..1] | ForEach-Object { Join-Path $_ 'shared_preferences.json' })
 foreach ($path in @($dataDirectories) + @($protocolKeys) + @($profileKey, $userKey)) {
     if (Test-Path -LiteralPath $path) { throw "Test requires an unused path: $path" }
 }
@@ -63,28 +65,11 @@ function Set-TestRegistrations([string] $Executable) {
     New-ItemProperty -Path $approvedKey -Name FlClash -PropertyType Binary -Value ([byte[]](2, 0, 0, 0)) -Force | Out-Null
 }
 
-function Read-BootStage {
-    foreach ($directory in $dataDirectories[0..1]) {
-        $path = Join-Path $directory 'shared_preferences.json'
-        if (-not (Test-Path -LiteralPath $path)) { continue }
-        try {
-            $preferences = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json -AsHashtable
-            if ($preferences.ContainsKey('flutter.boot_record')) {
-                return ($preferences['flutter.boot_record'] | ConvertFrom-Json).stage
-            }
-        } catch { }
-    }
-    return $null
-}
-
 function Start-TestApp([string] $Executable) {
+    # Empty-profile startup persists sharedState after Core initialization on Windows; BootGuard is Android-only.
+    Reset-AppReadiness $preferencePaths
     $script:appProcess = Start-Process -FilePath $Executable -PassThru
-    $deadline = [DateTime]::UtcNow.AddSeconds(45)
-    while ((Read-BootStage) -ne 'running') {
-        if ($script:appProcess.HasExited) { throw 'The installed app exited during startup.' }
-        if ([DateTime]::UtcNow -ge $deadline) { throw 'The installed app did not finish startup.' }
-        Start-Sleep -Milliseconds 100
-    }
+    Wait-AppReady $script:appProcess $preferencePaths
     New-ItemProperty -Path $internetKey -Name ProxyServer -PropertyType String -Value '127.0.0.1:7890' -Force | Out-Null
     New-ItemProperty -Path $internetKey -Name ProxyEnable -PropertyType DWord -Value 1 -Force | Out-Null
     [InstallerProxyFixture]::Refresh()
@@ -177,7 +162,6 @@ try {
     Set-TestRegistrations $legacyExecutable
     Invoke-Installer $installers[0].FullName $arguments
     Assert-AppStopped
-    if ($null -ne (Read-BootStage)) { throw 'Upgrade skipped the application exit coordinator.' }
     if ((Get-ItemPropertyValue -LiteralPath $runKey -Name FlClash) -ne $executable) {
         throw 'Upgrade did not migrate the startup executable.'
     }
