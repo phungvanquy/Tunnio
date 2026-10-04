@@ -2,6 +2,39 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "1.0.2",
+      "tag": "v1.0.2",
+      "date": "2026-10-04",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "7db4251",
+              "scope": "branding",
+              "text": "Updated app icons and a simpler About screen"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "64b6e9d",
+              "scope": "windows",
+              "text": "Fix Windows installer packaging compatibility"
+            },
+            {
+              "id": "456aca6",
+              "scope": "windows",
+              "text": "Improve Windows startup reliability and clean shutdown during upgrades and uninstall"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.0.1",
       "tag": "v1.0.1",
       "date": "2026-09-30",

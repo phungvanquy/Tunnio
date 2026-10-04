@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.0.2 (2026-10-04)
+
+**Features**
+
+- **branding** Updated app icons and a simpler About screen (7db4251)
+
+**Bug Fixes**
+
+- **windows** Fix Windows installer packaging compatibility (64b6e9d)
+- **windows** Improve Windows startup reliability and clean shutdown during upgrades and uninstall (456aca6)
+
 ## v1.0.1 (2026-09-30)
 
 **Features**
