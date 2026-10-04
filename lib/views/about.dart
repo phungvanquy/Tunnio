@@ -2,26 +2,11 @@ import 'dart:async';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
-import 'package:fl_clash/widgets/list.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-@immutable
-class Contributor {
-  final String avatar;
-  final String name;
-  final String link;
-
-  const Contributor({
-    required this.avatar,
-    required this.name,
-    required this.link,
-  });
-}
 
 class AboutView extends ConsumerWidget {
   const AboutView({super.key});
@@ -35,161 +20,85 @@ class AboutView extends ConsumerWidget {
     unawaited(commonAction.checkUpdateResultHandle(data: data, isUser: true));
   }
 
-  List<Widget> _buildMoreSection(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    return generateSection(
-      separated: false,
-      title: appLocalizations.more,
-      items: [
-        ListItem(
-          title: Text(appLocalizations.checkUpdate),
-          onTap: () {
-            _checkUpdate(context, ref);
-          },
-        ),
-        ListItem(
-          title: Text(appLocalizations.project),
-          onTap: () {
-            dialogs.openUrl('https://github.com/$repository');
-          },
-          trailing: const Icon(Icons.launch),
-        ),
-        ListItem(
-          title: Text(appLocalizations.core),
-          onTap: () {
-            dialogs.openUrl('https://github.com/$coreRepository');
-          },
-          trailing: const Icon(Icons.launch),
-        ),
-      ],
-    );
-  }
-
-  List<Widget> _buildContributorsSection(AppLocalizations appLocalizations) {
-    const contributors = [
-      Contributor(
-        avatar: 'assets/images/avatar/june2.jpg',
-        name: 'June2',
-        link: 'https://t.me/Jibadong',
-      ),
-      Contributor(
-        avatar: 'assets/images/avatar/arue.jpg',
-        name: 'Arue',
-        link: 'https://t.me/xrcm6868',
-      ),
-    ];
-    return generateSection(
-      separated: false,
-      title: appLocalizations.otherContributors,
-      items: [
-        ListItem(
-          title: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Wrap(
-              spacing: 24,
-              children: [
-                for (final contributor in contributors)
-                  Avatar(contributor: contributor),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
-    final items = [
-      ListTile(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Consumer(
-              builder: (_, ref, _) {
-                return _DeveloperModeDetector(
-                  child: Wrap(
-                    spacing: 16,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Image.asset(
-                          'assets/images/icon.png',
-                          width: 64,
-                          height: 64,
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            appName,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          Text(
-                            globalState.packageInfo.version,
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  onEnterDeveloperMode: () {
-                    ref
-                        .read(appSettingProvider.notifier)
-                        .update((state) => state.copyWith(developerMode: true));
-                    context.showNotifier(
-                      appLocalizations.developerModeEnableTip,
-                      level: MessageLevel.success,
-                    );
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            Text(
-              appLocalizations.desc,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 12),
-      ..._buildContributorsSection(appLocalizations),
-      ..._buildMoreSection(context, ref),
-    ];
+    final colorScheme = context.colorScheme;
+    final textTheme = context.textTheme;
     return BaseScaffold(
       title: appLocalizations.about,
-      body: Padding(
-        padding: kMaterialListPadding.copyWith(top: 16, bottom: 16),
-        child: generateListView(items),
-      ),
-    );
-  }
-}
-
-class Avatar extends StatelessWidget {
-  final Contributor contributor;
-
-  const Avatar({super.key, required this.contributor});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Column(
-        children: [
-          SizedBox(
-            width: 36,
-            height: 36,
-            child: CircleAvatar(
-              foregroundImage: AssetImage(contributor.avatar),
-            ),
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            children: [
+              _DeveloperModeDetector(
+                onEnterDeveloperMode: () {
+                  ref
+                      .read(appSettingProvider.notifier)
+                      .update((state) => state.copyWith(developerMode: true));
+                  context.showNotifier(
+                    appLocalizations.developerModeEnableTip,
+                    level: MessageLevel.success,
+                  );
+                },
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/icon.png',
+                      width: 128,
+                      height: 128,
+                      excludeFromSemantics: true,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      appName,
+                      textAlign: TextAlign.center,
+                      style: textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: ShapeDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        shape: AppShape.full,
+                      ),
+                      child: Text(
+                        globalState.packageInfo.version,
+                        textAlign: TextAlign.center,
+                        style: textTheme.labelLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                appLocalizations.desc,
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 32),
+              FilledButton.tonalIcon(
+                onPressed: () => _checkUpdate(context, ref),
+                icon: const Icon(Icons.system_update_alt_rounded),
+                label: Text(
+                  appLocalizations.checkUpdate,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(contributor.name, style: context.textTheme.bodySmall),
-        ],
+        ),
       ),
     );
   }
