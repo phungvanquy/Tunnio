@@ -882,6 +882,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnConfiguration": MessageLookupByLibrary.simpleMessage("VPN 配置"),
     "vpnConnect": MessageLookupByLibrary.simpleMessage("连接"),
     "vpnConnectionFailed": MessageLookupByLibrary.simpleMessage("连接需要处理"),
+    "vpnConnectionMode": MessageLookupByLibrary.simpleMessage("连接模式"),
+    "vpnConnectionModeCombined": MessageLookupByLibrary.simpleMessage(
+      "VPN（TUN）+ 系统代理",
+    ),
+    "vpnConnectionModeManual": MessageLookupByLibrary.simpleMessage("手动代理"),
+    "vpnConnectionModeProxyDescription": MessageLookupByLibrary.simpleMessage(
+      "仅遵循系统代理设置的应用会使用代理，其他流量不受影响。",
+    ),
+    "vpnConnectionModeTun": MessageLookupByLibrary.simpleMessage("VPN（TUN）"),
+    "vpnConnectionModeTunDescription": MessageLookupByLibrary.simpleMessage(
+      "推荐用于应用和游戏。通过 VPN 路由设备流量，可能需要管理员权限。",
+    ),
     "vpnCurrentNode": MessageLookupByLibrary.simpleMessage("当前节点"),
     "vpnCustomRouting": MessageLookupByLibrary.simpleMessage("自定义路由"),
     "vpnCustomRoutingDescription": MessageLookupByLibrary.simpleMessage(

@@ -1224,6 +1224,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnConnectionFailed": MessageLookupByLibrary.simpleMessage(
       "Connection needs attention",
     ),
+    "vpnConnectionMode": MessageLookupByLibrary.simpleMessage(
+      "Connection mode",
+    ),
+    "vpnConnectionModeCombined": MessageLookupByLibrary.simpleMessage(
+      "VPN (TUN) + system proxy",
+    ),
+    "vpnConnectionModeManual": MessageLookupByLibrary.simpleMessage(
+      "Manual proxy",
+    ),
+    "vpnConnectionModeProxyDescription": MessageLookupByLibrary.simpleMessage(
+      "Only apps that follow system proxy settings use the proxy. Other traffic is unaffected.",
+    ),
+    "vpnConnectionModeTun": MessageLookupByLibrary.simpleMessage("VPN (TUN)"),
+    "vpnConnectionModeTunDescription": MessageLookupByLibrary.simpleMessage(
+      "Recommended for apps and games. Routes device traffic through the VPN and may require administrator permission.",
+    ),
     "vpnCurrentNode": MessageLookupByLibrary.simpleMessage("Current node"),
     "vpnCustomRouting": MessageLookupByLibrary.simpleMessage("Custom routing"),
     "vpnCustomRoutingDescription": MessageLookupByLibrary.simpleMessage(

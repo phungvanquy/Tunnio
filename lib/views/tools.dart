@@ -10,7 +10,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 class ToolsView extends StatelessWidget {
-  const ToolsView({super.key});
+  const ToolsView({super.key, this.isDesktop});
+
+  final bool? isDesktop;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,12 @@ class ToolsView extends StatelessWidget {
         ),
       ...generateSection(
         title: text.settings,
-        items: const [_LocaleItem(), _ThemeItem(), _SettingItem()],
+        items: [
+          if (isDesktop ?? system.isDesktop) const _ConnectionModeItem(),
+          const _LocaleItem(),
+          const _ThemeItem(),
+          const _SettingItem(),
+        ],
       ),
       ...generateSection(title: text.other, items: const [_InfoItem()]),
     ];
@@ -52,6 +59,77 @@ class ToolsView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ConnectionModeItem extends ConsumerWidget {
+  const _ConnectionModeItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final text = context.appLocalizations;
+    final defaultsPending = ref.watch(
+      appSettingProvider.select((state) => state.vpnDefaultsPending),
+    );
+    final tun = ref.watch(
+      patchClashConfigProvider.select((state) => state.tun.enable),
+    );
+    final proxy = ref.watch(
+      networkSettingProvider.select((state) => state.systemProxy),
+    );
+    final enableTun = defaultsPending || tun;
+    final label = switch ((enableTun, proxy)) {
+      (true, true) => text.vpnConnectionModeCombined,
+      (true, false) => text.vpnConnectionModeTun,
+      (false, true) => text.systemProxy,
+      (false, false) => text.vpnConnectionModeManual,
+    };
+    return ListItem(
+      leading: const Icon(Icons.vpn_key_outlined),
+      title: Text(text.vpnConnectionMode),
+      subtitle: Text(label),
+      onTap: () async {
+        final selected = await dialogs.showCommonDialog<bool>(
+          child: CommonDialog(
+            title: text.vpnConnectionMode,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: Builder(
+              builder: (context) => RadioGroup<bool>(
+                groupValue: enableTun ? true : (proxy ? false : null),
+                onChanged: (value) => Navigator.of(context).pop(value),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListItem<bool>.radio(
+                      value: true,
+                      onTap: () => Navigator.of(context).pop(true),
+                      title: Text(text.vpnConnectionModeTun),
+                      subtitle: Text(text.vpnConnectionModeTunDescription),
+                    ),
+                    ListItem<bool>.radio(
+                      value: false,
+                      onTap: () => Navigator.of(context).pop(false),
+                      title: Text(text.systemProxy),
+                      subtitle: Text(text.vpnConnectionModeProxyDescription),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        if (selected == null || !context.mounted) return;
+        ref
+            .read(appSettingProvider.notifier)
+            .update((state) => state.copyWith(vpnDefaultsPending: false));
+        ref
+            .read(networkSettingProvider.notifier)
+            .update((state) => state.copyWith(systemProxy: !selected));
+        ref
+            .read(patchClashConfigProvider.notifier)
+            .update((state) => state.copyWith.tun(enable: selected));
+      },
     );
   }
 }
