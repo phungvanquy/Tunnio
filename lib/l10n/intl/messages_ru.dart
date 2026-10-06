@@ -1281,6 +1281,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnConnectionFailed": MessageLookupByLibrary.simpleMessage(
       "Требуется проверка подключения",
     ),
+    "vpnConnectionMode": MessageLookupByLibrary.simpleMessage(
+      "Режим подключения",
+    ),
+    "vpnConnectionModeCombined": MessageLookupByLibrary.simpleMessage(
+      "VPN (TUN) + системный прокси",
+    ),
+    "vpnConnectionModeManual": MessageLookupByLibrary.simpleMessage(
+      "Ручная настройка прокси",
+    ),
+    "vpnConnectionModeProxyDescription": MessageLookupByLibrary.simpleMessage(
+      "Прокси используют только приложения, учитывающие системные настройки прокси. Остальной трафик не затрагивается.",
+    ),
+    "vpnConnectionModeTun": MessageLookupByLibrary.simpleMessage("VPN (TUN)"),
+    "vpnConnectionModeTunDescription": MessageLookupByLibrary.simpleMessage(
+      "Рекомендуется для приложений и игр. Направляет трафик устройства через VPN. Могут потребоваться права администратора.",
+    ),
     "vpnCurrentNode": MessageLookupByLibrary.simpleMessage("Текущий узел"),
     "vpnCustomRouting": MessageLookupByLibrary.simpleMessage(
       "Пользовательская маршрутизация",

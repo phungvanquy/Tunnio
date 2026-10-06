@@ -59,7 +59,25 @@ class _HomePageState extends ConsumerState<HomePage> {
     return HomeBackScopeContainer(
       child: Scaffold(
         appBar: AppBar(
-          title: Text(appName, style: context.textTheme.titleLarge),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/icon.png',
+                width: 32,
+                height: 32,
+                excludeFromSemantics: true,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  appName,
+                  style: context.textTheme.titleLarge,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
           automaticallyImplyLeading: false,
           actions: [
             IconButton(

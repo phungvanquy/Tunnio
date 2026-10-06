@@ -1,6 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'intl/messages_all.dart';
 
 // **************************************************************************
@@ -217,6 +218,66 @@ class AppLocalizations {
   /// `Home`
   String get vpnHome {
     return Intl.message('Home', name: 'vpnHome', desc: '', args: []);
+  }
+
+  /// `Connection mode`
+  String get vpnConnectionMode {
+    return Intl.message(
+      'Connection mode',
+      name: 'vpnConnectionMode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `VPN (TUN)`
+  String get vpnConnectionModeTun {
+    return Intl.message(
+      'VPN (TUN)',
+      name: 'vpnConnectionModeTun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `VPN (TUN) + system proxy`
+  String get vpnConnectionModeCombined {
+    return Intl.message(
+      'VPN (TUN) + system proxy',
+      name: 'vpnConnectionModeCombined',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Manual proxy`
+  String get vpnConnectionModeManual {
+    return Intl.message(
+      'Manual proxy',
+      name: 'vpnConnectionModeManual',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Recommended for apps and games. Routes device traffic through the VPN and may require administrator permission.`
+  String get vpnConnectionModeTunDescription {
+    return Intl.message(
+      'Recommended for apps and games. Routes device traffic through the VPN and may require administrator permission.',
+      name: 'vpnConnectionModeTunDescription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only apps that follow system proxy settings use the proxy. Other traffic is unaffected.`
+  String get vpnConnectionModeProxyDescription {
+    return Intl.message(
+      'Only apps that follow system proxy settings use the proxy. Other traffic is unaffected.',
+      name: 'vpnConnectionModeProxyDescription',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Connect`

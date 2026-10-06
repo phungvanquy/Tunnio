@@ -1015,6 +1015,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnConfiguration": MessageLookupByLibrary.simpleMessage("VPN 設定"),
     "vpnConnect": MessageLookupByLibrary.simpleMessage("接続"),
     "vpnConnectionFailed": MessageLookupByLibrary.simpleMessage("接続を確認してください"),
+    "vpnConnectionMode": MessageLookupByLibrary.simpleMessage("接続モード"),
+    "vpnConnectionModeCombined": MessageLookupByLibrary.simpleMessage(
+      "VPN（TUN）+ システムプロキシ",
+    ),
+    "vpnConnectionModeManual": MessageLookupByLibrary.simpleMessage("手動プロキシ"),
+    "vpnConnectionModeProxyDescription": MessageLookupByLibrary.simpleMessage(
+      "システムのプロキシ設定に従うアプリのみがプロキシを使用します。その他の通信には影響しません。",
+    ),
+    "vpnConnectionModeTun": MessageLookupByLibrary.simpleMessage("VPN（TUN）"),
+    "vpnConnectionModeTunDescription": MessageLookupByLibrary.simpleMessage(
+      "アプリやゲームにおすすめです。端末の通信を VPN 経由にします。管理者権限が必要な場合があります。",
+    ),
     "vpnCurrentNode": MessageLookupByLibrary.simpleMessage("現在のノード"),
     "vpnCustomRouting": MessageLookupByLibrary.simpleMessage("カスタムルーティング"),
     "vpnCustomRoutingDescription": MessageLookupByLibrary.simpleMessage(
