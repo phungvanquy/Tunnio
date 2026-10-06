@@ -441,7 +441,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "exitFullScreen": MessageLookupByLibrary.simpleMessage("Exit full screen"),
     "expand": MessageLookupByLibrary.simpleMessage("Standard"),
     "expectedStatus": MessageLookupByLibrary.simpleMessage("Expected status"),
-    "expireTime": MessageLookupByLibrary.simpleMessage("Expiration time"),
+    "expireTime": MessageLookupByLibrary.simpleMessage("Expiration date"),
     "exportFile": MessageLookupByLibrary.simpleMessage("Export file"),
     "exportLogs": MessageLookupByLibrary.simpleMessage("Export logs"),
     "exportSuccess": MessageLookupByLibrary.simpleMessage("Export successful"),

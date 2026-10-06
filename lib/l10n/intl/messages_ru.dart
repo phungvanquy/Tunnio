@@ -454,7 +454,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "expand": MessageLookupByLibrary.simpleMessage("Стандартный"),
     "expectedStatus": MessageLookupByLibrary.simpleMessage("Ожидаемый статус"),
-    "expireTime": MessageLookupByLibrary.simpleMessage("Срок действия"),
+    "expireTime": MessageLookupByLibrary.simpleMessage("Дата окончания"),
     "exportFile": MessageLookupByLibrary.simpleMessage("Экспорт файла"),
     "exportLogs": MessageLookupByLibrary.simpleMessage("Экспорт логов"),
     "exportSuccess": MessageLookupByLibrary.simpleMessage("Экспорт выполнен"),

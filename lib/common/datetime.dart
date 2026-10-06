@@ -62,6 +62,20 @@ String getDateStringLast2(int value) {
   return valueRaw.substring(valueRaw.length - 2);
 }
 
+String? formatSubscriptionExpiry(int? seconds) {
+  if (seconds == null || seconds <= 0) return null;
+  final end =
+      DateTime(10000).millisecondsSinceEpoch ~/ Duration.millisecondsPerSecond;
+  if (seconds >= end) return null;
+  final date = DateTime.fromMillisecondsSinceEpoch(
+    seconds * Duration.millisecondsPerSecond,
+  );
+  final day = getDateStringLast2(date.day);
+  final month = getDateStringLast2(date.month);
+  final year = date.year.toString().padLeft(4, '0');
+  return '$day/$month/$year';
+}
+
 String getTimeText(int? timeStamp) {
   if (timeStamp == null) {
     return '00:00:00';

@@ -590,10 +590,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Expiration time`
+  /// `Expiration date`
   String get expireTime {
     return Intl.message(
-      'Expiration time',
+      'Expiration date',
       name: 'expireTime',
       desc: '',
       args: [],

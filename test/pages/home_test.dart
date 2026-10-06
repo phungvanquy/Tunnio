@@ -318,6 +318,98 @@ void main() {
     expect(find.text('Connected'), findsNothing);
   });
 
+  homeTest(
+    'Home shows subscription expiry without traffic metadata and refreshes it',
+    (tester) async {
+      Profile withExpiry(DateTime date) => configured().copyWith(
+        subscriptionInfo: SubscriptionInfo.formHString(
+          'expire=${date.millisecondsSinceEpoch ~/ Duration.millisecondsPerSecond}',
+        ),
+      );
+
+      setProfile(withExpiry(DateTime(2024, 12, 22)));
+      await pump(tester);
+      expect(find.text('Expiration date: 22/12/2024'), findsOneWidget);
+      expect(find.textContaining('private'), findsNothing);
+
+      setProfile(withExpiry(DateTime(2027, 2, 9)));
+      await tester.pump();
+      expect(find.text('Expiration date: 09/02/2027'), findsOneWidget);
+      expect(find.textContaining('22/12/2024'), findsNothing);
+
+      setProfile(
+        configured().copyWith(url: 'https://other.example/subscription'),
+      );
+      await tester.pump();
+      expect(find.text('Expiration date: Unknown'), findsOneWidget);
+      expect(find.textContaining('09/02/2027'), findsNothing);
+    },
+  );
+
+  for (final header in <String?>[
+    null,
+    'upload=1; total=100',
+    'expire=',
+    'expire=0',
+    'expire=-1',
+    'expire=invalid',
+    'expire=9223372036854775807',
+  ]) {
+    homeTest('Home handles missing or invalid expiry: $header', (tester) async {
+      setProfile(
+        configured().copyWith(
+          subscriptionInfo: header == null
+              ? null
+              : SubscriptionInfo.formHString(header),
+        ),
+      );
+      await pump(tester);
+      expect(find.text('Expiration date: Unknown'), findsOneWidget);
+      expect(find.textContaining('1970'), findsNothing);
+      expect(find.textContaining('Never expires'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  homeTest('Home hides subscription expiry for local files', (tester) async {
+    setProfile(
+      configured().copyWith(
+        url: '',
+        subscriptionInfo: const SubscriptionInfo(expire: 1822789535),
+      ),
+    );
+    await pump(tester);
+    expect(find.byKey(const Key('vpn-subscription-expiry')), findsNothing);
+  });
+
+  homeTest(
+    'subscription expiry remains readable on a narrow screen with large text',
+    (tester) async {
+      setProfile(
+        configured().copyWith(
+          subscriptionInfo: SubscriptionInfo(
+            expire:
+                DateTime(2024, 12, 22).millisecondsSinceEpoch ~/
+                Duration.millisecondsPerSecond,
+          ),
+        ),
+      );
+      await pump(tester, size: const Size(320, 640), scale: 2.5);
+      final expiry = find.text('Expiration date: 22/12/2024');
+      final scrollable = find.descendant(
+        of: find.byKey(const Key('vpn-controls-scroll')),
+        matching: find.byType(Scrollable),
+      );
+      await tester.scrollUntilVisible(expiry, 50, scrollable: scrollable);
+      await tester.pumpAndSettle();
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.descendant(of: expiry, matching: find.byType(RichText)),
+      );
+      expect(paragraph.didExceedMaxLines, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   homeTest('unready connection has a distinct disabled label and appearance', (
     tester,
   ) async {

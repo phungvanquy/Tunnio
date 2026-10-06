@@ -37,9 +37,9 @@ class SubscriptionInfoView extends StatelessWidget {
 
     final useShow = use.traffic.show;
     final totalShow = total.traffic.show;
-    final expireShow = info.expire != 0
-        ? DateTime.fromMillisecondsSinceEpoch(info.expire * 1000).show
-        : context.appLocalizations.infiniteTime;
+    final expireShow =
+        formatSubscriptionExpiry(info.expire) ??
+        context.appLocalizations.unknown;
     final valueStyle = context.textTheme.bodyMedium?.toSoftBold.copyWith(
       color: context.colorScheme.onSurfaceVariant,
     );
@@ -105,11 +105,9 @@ class SubscriptionInfoDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     final used = subscriptionInfo.upload + subscriptionInfo.download;
-    final expire = subscriptionInfo.expire != 0
-        ? DateTime.fromMillisecondsSinceEpoch(
-            subscriptionInfo.expire * 1000,
-          ).show
-        : appLocalizations.infiniteTime;
+    final expire =
+        formatSubscriptionExpiry(subscriptionInfo.expire) ??
+        appLocalizations.unknown;
     return SelectionArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,

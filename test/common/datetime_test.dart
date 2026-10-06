@@ -5,6 +5,35 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/test_app.dart';
 
 void main() {
+  group('formatSubscriptionExpiry', () {
+    for (final (date, expected) in [
+      (DateTime(2024, 12, 22), '22/12/2024'),
+      (DateTime(2027, 2, 9), '09/02/2027'),
+      (DateTime(2028, 2, 29, 23, 59, 59), '29/02/2028'),
+      (DateTime(2100, 1, 1), '01/01/2100'),
+      (DateTime(9999, 12, 31, 23, 59, 59), '31/12/9999'),
+    ]) {
+      test('formats the local expiration date as $expected', () {
+        final seconds =
+            date.millisecondsSinceEpoch ~/ Duration.millisecondsPerSecond;
+        expect(formatSubscriptionExpiry(seconds), expected);
+      });
+    }
+
+    for (final seconds in [
+      null,
+      0,
+      -1,
+      DateTime(10000).millisecondsSinceEpoch ~/ Duration.millisecondsPerSecond,
+      8640000000001,
+      9223372036854775807,
+    ]) {
+      test('returns no date for an unspecified or invalid value: $seconds', () {
+        expect(formatSubscriptionExpiry(seconds), isNull);
+      });
+    }
+  });
+
   group('DateTimeExtension', () {
     test('detects dates before now', () {
       expect(

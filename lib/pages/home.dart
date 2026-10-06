@@ -352,6 +352,17 @@ class _ConnectionControlState extends ConsumerState<_ConnectionControl> {
                   ),
                 ),
               ),
+            if (profile.type == ProfileType.url) ...[
+              const SizedBox(height: 4),
+              Text(
+                '${text.expireTime}: ${formatSubscriptionExpiry(profile.subscriptionInfo?.expire) ?? text.unknown}',
+                key: const Key('vpn-subscription-expiry'),
+                textAlign: TextAlign.center,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             const SizedBox(height: 6),
             Semantics(
               liveRegion: true,

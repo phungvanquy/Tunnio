@@ -61,7 +61,7 @@
   "download": "Загрузка",
   "usedTraffic": "Использованный трафик",
   "totalTraffic": "Общий трафик",
-  "expireTime": "Срок действия",
+  "expireTime": "Дата окончания",
   "nullProfileDesc": "Профилей пока нет. Сначала добавьте профиль",
   "settings": "Настройки",
   "language": "Язык",

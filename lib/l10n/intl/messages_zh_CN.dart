@@ -318,7 +318,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "exitFullScreen": MessageLookupByLibrary.simpleMessage("退出全屏"),
     "expand": MessageLookupByLibrary.simpleMessage("标准"),
     "expectedStatus": MessageLookupByLibrary.simpleMessage("预期状态"),
-    "expireTime": MessageLookupByLibrary.simpleMessage("到期时间"),
+    "expireTime": MessageLookupByLibrary.simpleMessage("到期日期"),
     "exportFile": MessageLookupByLibrary.simpleMessage("导出文件"),
     "exportLogs": MessageLookupByLibrary.simpleMessage("导出日志"),
     "exportSuccess": MessageLookupByLibrary.simpleMessage("导出成功"),

@@ -7,7 +7,13 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../helpers/test_app.dart';
+
 void main() {
+  final expire =
+      DateTime(2100, 1, 1).millisecondsSinceEpoch ~/
+      Duration.millisecondsPerSecond;
+
   testWidgets('hides expiry when both values do not fit', (tester) async {
     const trafficLabel = '1KB / 1GB';
 
@@ -23,14 +29,14 @@ void main() {
           globalState.theme = CommonTheme.of(context, 1);
           return child!;
         },
-        home: const Scaffold(
+        home: Scaffold(
           body: SizedBox(
             width: 120,
             child: SubscriptionInfoView(
               subscriptionInfo: SubscriptionInfo(
                 upload: 1024,
                 total: 1073741824,
-                expire: 4102444800,
+                expire: expire,
               ),
             ),
           ),
@@ -40,6 +46,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text(trafficLabel), findsOneWidget);
+    expect(find.text('01/01/2100'), findsNothing);
     expect(
       find.descendant(
         of: find.byType(SubscriptionInfoView),
@@ -59,14 +66,14 @@ void main() {
           ...GlobalMaterialLocalizations.delegates,
         ],
         supportedLocales: AppLocalizations.delegate.supportedLocales,
-        home: const Scaffold(
+        home: Scaffold(
           body: SizedBox(
             width: 300,
             child: SubscriptionInfoView(
               subscriptionInfo: SubscriptionInfo(
                 upload: 1024,
                 total: 1073741824,
-                expire: 4102444800,
+                expire: expire,
               ),
             ),
           ),
@@ -75,6 +82,7 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+    expect(find.text('01/01/2100'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byType(SubscriptionInfoView),
@@ -99,13 +107,13 @@ void main() {
           globalState.theme = CommonTheme.of(context, 1);
           return child!;
         },
-        home: const Scaffold(
+        home: Scaffold(
           body: SubscriptionInfoDetailView(
             subscriptionInfo: SubscriptionInfo(
               upload: 1024,
               download: 2048,
               total: 1073741824,
-              expire: 4102444800,
+              expire: expire,
             ),
           ),
         ),
@@ -117,8 +125,33 @@ void main() {
     expect(find.text(appLocalizations.usedTraffic), findsOneWidget);
     expect(find.text(appLocalizations.totalTraffic), findsOneWidget);
     expect(find.text(appLocalizations.expireTime), findsOneWidget);
+    expect(find.text('01/01/2100'), findsOneWidget);
     expect(find.text('3KB'), findsOneWidget);
     expect(find.text('1GB'), findsOneWidget);
     expect(find.byType(DecorationListItem), findsNWidgets(3));
   });
+
+  for (final invalid in [0, -1, 9223372036854775807]) {
+    testWidgets(
+      'subscription views handle an unspecified or invalid expiry: $invalid',
+      (tester) async {
+        final info = SubscriptionInfo(total: 100, expire: invalid);
+        await tester.pumpWidget(
+          TestApp(
+            child: Scaffold(
+              body: Column(
+                children: [
+                  SubscriptionInfoView(subscriptionInfo: info),
+                  SubscriptionInfoDetailView(subscriptionInfo: info),
+                ],
+              ),
+            ),
+          ),
+        );
+        expect(find.text(AppLocalizations.current.unknown), findsNWidgets(2));
+        expect(find.text(AppLocalizations.current.infiniteTime), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }
