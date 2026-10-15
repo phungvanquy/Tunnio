@@ -47,6 +47,10 @@ app.*.map.json
 
 # Documentation (generated/planning artifacts)
 docs/
+!/docs/
+/docs/*
+!/docs/BUILDING.md
+!/docs/ENCRYPTED_LINKS.md
 
 
 # Android Studio will place build artifacts here

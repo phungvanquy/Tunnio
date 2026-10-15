@@ -1,171 +1,130 @@
-<div>
-
-[**简体中文**](README_zh_CN.md)
-
-</div>
-
-## Tunnio
-
-Tunnio is an open-source, ad-free proxy client based on ClashMeta. Its Core is maintained in [Tunnio-core](https://github.com/phungvanquy/Tunnio-core). Test builds are available from [GitHub Actions](https://github.com/phungvanquy/Tunnio/actions).
-
-[![Downloads](https://img.shields.io/github/downloads/phungvanquy/Tunnio/total?style=flat-square&logo=github)](https://github.com/phungvanquy/Tunnio/releases/)[![Last Version](https://img.shields.io/github/release/phungvanquy/Tunnio/all.svg?style=flat-square)](https://github.com/phungvanquy/Tunnio/releases/)[![License](https://img.shields.io/github/license/phungvanquy/Tunnio?style=flat-square)](LICENSE)
-
-A simple proxy client for Android, Windows, macOS, and Linux.
-
 <p align="center">
-    <img alt="Tunnio" src="assets/images/icon.png" width="128">
+  <img src="assets/images/icon.png" width="96" alt="Tunnio icon">
 </p>
 
-## Features
+<h1 align="center">Tunnio</h1>
 
-✈️ Multi-platform: Android, Windows, macOS and Linux
+<p align="center">A simple, open-source proxy client for Android, Windows, macOS, and Linux.</p>
 
-💻 Adaptive multiple screen sizes, Multiple color themes available
+<p align="center">
+  <a href="https://github.com/phungvanquy/Tunnio/releases"><img src="https://img.shields.io/github/v/release/phungvanquy/Tunnio?style=flat-square" alt="Latest release"></a>
+  <a href="https://github.com/phungvanquy/Tunnio/actions/workflows/build.yaml"><img src="https://github.com/phungvanquy/Tunnio/actions/workflows/build.yaml/badge.svg" alt="Build status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="GPL-3.0 license"></a>
+</p>
 
-💡 Based on Material You Design, [Surfboard](https://github.com/getsurfboard/surfboard)-like UI
+<p align="center">
+  <a href="https://github.com/phungvanquy/Tunnio/releases">Download</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="VPN_GUIDE.md">User guide</a> ·
+  <a href="README_zh_CN.md">简体中文</a>
+</p>
 
-🔒 Simplified settings keep subscription links and configuration exports out of view
+Tunnio brings subscription import, server selection, and connection controls into one focused interface.
+It is ad-free, built with Flutter, and powered by a mihomo-based [Tunnio Core](https://github.com/phungvanquy/Tunnio-core).
+Bring your own compatible subscription; the app does not provide a VPN service or servers.
 
-✨ Support plain and RSA-encrypted subscription links, Dark mode
+<p align="center">
+  <img src="snapshots/desktop-dark.png" width="1080" alt="Tunnio in dark mode, showing a demo TUN connection, Auto selection, and server latency results">
+</p>
 
-## Use
+*Demo UI rendered from the current source. Server names, connection states, and latency values are illustrative;
+released versions may differ. [View all snapshots and capture instructions](snapshots/README.md).*
 
-### Quick start
+## Why Tunnio
 
-1. Import a plain HTTP(S) subscription URL or a `tunnio-rsa:` encrypted link by QR code, **Paste from clipboard**, or manual entry.
-2. Choose **Auto**, **Fallback**, or a server from Home's single list.
-3. Press the large circular button to connect; press it again to disconnect. Grant VPN/TUN permission if requested.
-
-Connected is green; disconnected is gray. **Test latency** measures the servers and highlights the fastest without changing your selection. Connection transitions and latency tests show progress and prevent repeated submissions.
-
-The app keeps one profile. A successful import replaces it; a failed import keeps your saved setup. Settings contains import/replace, refresh, recovery, language, theme, and essential app preferences. Subscription/provider-list refresh pauses when Flutter is closed; the current native VPN configuration and health checks continue.
-
-### Encrypted subscription links
-
-Tunnio accepts `tunnio-rsa:<unpadded base64url ciphertext>`. The ciphertext is an HTTP(S) URL encoded as UTF-8 and encrypted with RSA-OAEP using SHA-256 for both OAEP and MGF1. The app saves the encrypted link and decrypts it when downloading or refreshing. Plain HTTP(S) URLs remain supported.
-
-Generate a key pair locally. Keep the private key out of version control; distribute the public key to whoever creates links.
-
-```bash
-mkdir -p .local-keys
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out .local-keys/private.pem
-openssl pkey -in .local-keys/private.pem -pubout -out .local-keys/public.pem
-python3 - <<'PY'
-import base64, json
-from pathlib import Path
-
-private_key = Path('.local-keys/private.pem').read_bytes()
-Path('env.local.json').write_text(json.dumps({
-    'VPN_RSA_PRIVATE_KEY_B64': base64.b64encode(private_key).decode('ascii'),
-}))
-PY
-```
-
-Run `python3 tool/encrypt_subscription_url.py --public-key .local-keys/public.pem`, enter one URL on stdin, and copy the printed link into Tunnio. The normal `dart setup.dart <platform>` build merges the ignored `env.local.json` into its generated `env.json`. For direct Flutter builds, pass `--dart-define-from-file=env.local.json`. For GitHub Actions release builds, set the repository secret `VPN_RSA_PRIVATE_KEY_B64` to the base64 encoded PEM; the build workflow passes it to every platform package. A build without a key still imports plain URLs; it reports a missing key for encrypted links.
-
-RSA-OAEP encrypts only short URLs directly: a 3072-bit key accepts at most 318 UTF-8 bytes. Use a short subscription URL when needed. Existing encrypted links need the same private key for later refreshes; replacing the key requires reimporting links encrypted for the new public key. The bundled key and downloaded configuration can be extracted by someone with device or binary access, so this feature conceals the URL from normal app use rather than securing it against device inspection.
-
-See [VPN setup, routing, and migration](VPN_GUIDE.md) for connection-state meanings and recovery details.
-
-### Linux
-
-⚠️ Make sure to install the following dependencies before using them
-
-   ```bash
-    sudo apt-get install libayatana-appindicator3-dev
-   ```
-
-### Android
-
-APK builds do not require a Play Store account. Without the `KEYSTORE` GitHub Actions
-secret, CI uses debug signing and the `com.follow.clash.dev` application ID, including
-tagged builds. This installs alongside the release-signed app. APKs from different CI
-runs may require reinstalling because their debug keys can differ. For consistent
-upgrades, configure `KEYSTORE` (base64 keystore), `KEY_ALIAS`, `STORE_PASSWORD`, and
-`KEY_PASSWORD` in Actions secrets; these are separate from the subscription RSA key.
-
-Support the following actions
-
-   ```bash
-    com.follow.clash.action.START
-    
-    com.follow.clash.action.STOP
-    
-    com.follow.clash.action.TOGGLE
-   ```
+- **A focused connection flow.** Import one subscription, choose Auto, Fallback, or a server, then connect.
+- **Clear connection states.** Distinguish an active VPN/TUN connection from system-proxy or local-proxy operation.
+- **Latency at a glance.** Test servers without changing your selection; compare results directly in the server list.
+- **Safer configuration replacement.** Validate new content before committing it and retain the saved setup when an import fails.
+- **An adaptable interface.** Material You styling, light and dark themes, adjustable text size, and layouts for phones and desktops.
+- **Flexible import.** Paste a subscription link, enter it manually, or import a QR code. Builds configured with a matching key also accept encrypted links.
 
 ## Download
 
-Download installers from [Tunnio Releases](https://github.com/phungvanquy/Tunnio/releases), or test builds from [GitHub Actions](https://github.com/phungvanquy/Tunnio/actions).
+Get packaged builds from **[GitHub Releases](https://github.com/phungvanquy/Tunnio/releases)**.
+For development builds, open a successful run in **[GitHub Actions](https://github.com/phungvanquy/Tunnio/actions/workflows/build.yaml)**
+and download its artifacts. Choose the package matching your operating system and CPU architecture.
 
-Download filenames start with `Tunnio-`. Existing application IDs and data locations are retained; Android upgrades also require the same signing key.
+Download names begin with `Tunnio-`. Existing application identities and data locations are retained for upgrades.
+Android upgrades also require the same signing key; see the [Android signing notes](docs/BUILDING.md#android-signing).
+For platform prerequisites and packages you want to build locally, see [Building Tunnio](docs/BUILDING.md).
+
+## Quick start
+
+1. **Import your subscription.** Use **Paste from clipboard**, manual entry, or a QR code. Android supports camera scanning
+   and QR images; desktop supports QR image files.
+2. **Choose a server.** **Auto** chooses a responsive server. **Fallback** uses the first healthy server in source order.
+   Selecting a named server pins that choice.
+3. **Check the connection mode.** New Windows installations start with **System proxy**. For apps and games that ignore
+   system proxy settings, choose **Settings → Connection mode → VPN (TUN)**. New macOS/Linux installations default to TUN;
+   Android uses its VPN service. Existing installations keep their saved preferences.
+4. **Connect.** Press the circular connection button and grant any requested platform permission. Read the status beneath
+   it to confirm the active mode. Press the button again to disconnect.
+
+**Connected · system proxy only** is an expected working state in system proxy mode; only applications that use those settings are
+routed through Tunnio. **Connected** means the VPN/TUN path is active, but does not guarantee that every server or website
+is reachable. See the [connection-mode comparison](VPN_GUIDE.md#choose-a-connection-mode) and
+[troubleshooting guide](VPN_GUIDE.md#troubleshooting).
+
+### Encrypted subscription links
+
+Plain HTTP(S) subscriptions work without a custom key. The optional `tunnio-rsa:` format conceals the subscription URL
+during normal app use and requires a matching key in the app build. See [Encrypted subscription links](docs/ENCRYPTED_LINKS.md)
+for key setup, link generation, and its security limitations.
+
+## Interface preview
+
+<table>
+  <tr>
+    <th>Compact layout · light theme</th>
+    <th>Desktop connection modes</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="snapshots/mobile-light.png" width="280" alt="Compact Tunnio Home layout with a demo connection and server list"></td>
+    <td align="center"><img src="snapshots/connection-mode.png" width="680" alt="Connection mode dialog explaining System proxy and VPN (TUN), with System proxy selected"></td>
+  </tr>
+</table>
+
+These captures use the same demonstration data as the main preview. A [light desktop preview](snapshots/desktop-light.png)
+also shows the **Connected · system proxy only** state.
+
+## Documentation
+
+| Guide | What you will find |
+| --- | --- |
+| [Using Tunnio](VPN_GUIDE.md) | Import, connection modes, latency tests, updates, troubleshooting, and recovery |
+| [Building Tunnio](docs/BUILDING.md) | Toolchains, platform prerequisites, packaging, signing, and verification |
+| [Encrypted subscription links](docs/ENCRYPTED_LINKS.md) | RSA key setup, app configuration, link generation, and rotation |
+| [Demo snapshots](snapshots/README.md) | Full-size previews and a reproducible capture command |
+| [Changelog](CHANGELOG.md) | Release history |
 
 ## Build
 
-1. Update submodules
-   ```bash
-   git submodule update --init --recursive
-   ```
+Install the [required toolchains](docs/BUILDING.md#toolchains), then get the source:
 
-2. Install `Flutter` and `Golang` environment
+```bash
+git clone --recurse-submodules https://github.com/phungvanquy/Tunnio.git
+cd Tunnio
+flutter pub get
+```
 
-3. Build Application
+Use `dart setup.dart <platform>` to build a package.
+Supported platform arguments are `android`, `windows`, `macos`, and `linux`; desktop packages must be built on their
+matching operating system. The build hooks compile the native components automatically.
 
-    - android
+## Support and contributions
 
-        1. Install `Android SDK`, `Android NDK`
+Report reproducible problems through [GitHub Issues](https://github.com/phungvanquy/Tunnio/issues).
+Include your Tunnio version, operating system, connection mode, steps to reproduce, and the displayed error.
+Remove subscription URLs, tokens, and server credentials from logs and screenshots before sharing them.
 
-        2. Set `ANDROID_NDK` environment variable
+For code contributions, follow the [repository guidance](AGENTS.md) and run the
+[relevant checks](docs/BUILDING.md#verification). Documentation improvements and reproducible bug reports are welcome too.
 
-        3. Run build script
+## Credits and license
 
-           ```bash
-           dart setup.dart android
-           ```
+Tunnio builds on [FlClash](https://github.com/chen08209/FlClash),
+[mihomo](https://github.com/MetaCubeX/mihomo), and [Flutter](https://github.com/flutter/flutter).
+The interface follows Material You conventions, with inspiration from [Surfboard](https://github.com/getsurfboard/surfboard).
 
-    - windows
-
-        1. Requires a Windows client
-
-        2. Install `GCC`, `Inno Setup`
-
-        3. Run build script
-
-           ```bash
-           dart setup.dart windows
-           ```
-
-    - linux
-
-        1. Requires a Linux client
-
-        2. Dependencies are auto-installed by setup script, or manually:
-           ```bash
-           sudo apt-get install -y libayatana-appindicator3-dev
-           ```
-
-        3. Run build script
-
-           ```bash
-           dart setup.dart linux
-           ```
-
-    - macOS
-
-        1. Requires a macOS client
-
-        2. Run build script
-
-           ```bash
-           dart setup.dart macos
-           ```
-
-## Star
-
-The easiest way to support developers is to click on the star (⭐) at the top of the page.
-
-<p style="text-align: center;">
-    <a href="https://api.star-history.com/svg?repos=phungvanquy/Tunnio&Date">
-        <img alt="start" width=50% src="https://api.star-history.com/svg?repos=phungvanquy/Tunnio&Date"/>
-    </a>
-</p>
+Licensed under the [GNU General Public License v3.0](LICENSE).
