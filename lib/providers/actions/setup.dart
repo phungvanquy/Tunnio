@@ -15,6 +15,7 @@ class SetupAction extends _$SetupAction {
 
   Timer? _runtimeTimer;
   Future<void>? _runStateSync;
+  bool _authorizingTun = false;
   final _setupScheduler = SerialTaskScheduler();
   final _listenerScheduler = SerialTaskScheduler();
   _RunRequest? _latestRunRequest;
@@ -253,6 +254,9 @@ class SetupAction extends _$SetupAction {
       if (running && !initialize) {
         await _applyConnectDefaults();
         if (!_isCurrent(request)) return true;
+        if (system.isDesktop && ref.read(patchClashConfigProvider).tun.enable) {
+          _retryTunAuthorization();
+        }
       }
       return await (running ? _start(request) : _stop(request));
     } catch (_) {
@@ -268,9 +272,13 @@ class SetupAction extends _$SetupAction {
   Future<void> _applyConnectDefaults() async {
     if (!ref.read(appSettingProvider).vpnDefaultsPending) return;
     if (system.isDesktop) {
+      final mode = ref.read(desktopConnectionModeProvider);
       ref
           .read(patchClashConfigProvider.notifier)
-          .update((value) => value.copyWith.tun(enable: true));
+          .update((value) => value.copyWith.tun(enable: mode.tun));
+      ref
+          .read(networkSettingProvider.notifier)
+          .update((value) => value.copyWith(systemProxy: mode.systemProxy));
     } else if (system.isAndroid) {
       ref
           .read(vpnSettingProvider.notifier)
@@ -284,6 +292,29 @@ class SetupAction extends _$SetupAction {
           .read(appSettingProvider.notifier)
           .update((value) => value.copyWith(vpnDefaultsPending: true));
       throw StateError('Unable to persist VPN defaults');
+    }
+  }
+
+  void setDesktopConnectionMode({required bool tun}) {
+    if (!system.isDesktop) return;
+    if (tun) _retryTunAuthorization();
+    ref
+        .read(appSettingProvider.notifier)
+        .update((value) => value.copyWith(vpnDefaultsPending: false));
+    ref
+        .read(networkSettingProvider.notifier)
+        .update((value) => value.copyWith(systemProxy: !tun));
+    ref
+        .read(patchClashConfigProvider.notifier)
+        .update((value) => value.copyWith.tun(enable: tun));
+    if (_isRunning) updateConfigDebounce();
+  }
+
+  void _retryTunAuthorization() {
+    if (_authorizingTun) return;
+    final authorization = ref.read(authorizedTunEnableProvider.notifier);
+    if (authorization.value == TunAuthorizationState.unauthorized) {
+      authorization.value = TunAuthorizationState.none;
     }
   }
 
@@ -608,17 +639,21 @@ class SetupAction extends _$SetupAction {
     );
     authorizationNotifier.value = TunAuthorizationState.unauthorized;
 
-    final code = await authorizeCore();
-
-    switch (code) {
-      case AuthorizeCode.success:
-        authorizationNotifier.value = TunAuthorizationState.authorized;
-        return false;
-      case AuthorizeCode.none:
-        authorizationNotifier.value = TunAuthorizationState.authorized;
-        return true;
-      case AuthorizeCode.error:
-        return true;
+    _authorizingTun = true;
+    try {
+      final code = await authorizeCore();
+      switch (code) {
+        case AuthorizeCode.success:
+          authorizationNotifier.value = TunAuthorizationState.authorized;
+          return false;
+        case AuthorizeCode.none:
+          authorizationNotifier.value = TunAuthorizationState.authorized;
+          return true;
+        case AuthorizeCode.error:
+          return true;
+      }
+    } finally {
+      _authorizingTun = false;
     }
   }
 

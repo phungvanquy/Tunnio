@@ -1,6 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/l10n/l10n.dart';
-import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/views/about.dart';
 import 'package:fl_clash/views/application_setting.dart';
 import 'package:fl_clash/views/theme.dart';
@@ -69,17 +69,8 @@ class _ConnectionModeItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = context.appLocalizations;
-    final defaultsPending = ref.watch(
-      appSettingProvider.select((state) => state.vpnDefaultsPending),
-    );
-    final tun = ref.watch(
-      patchClashConfigProvider.select((state) => state.tun.enable),
-    );
-    final proxy = ref.watch(
-      networkSettingProvider.select((state) => state.systemProxy),
-    );
-    final enableTun = defaultsPending || tun;
-    final label = switch ((enableTun, proxy)) {
+    final mode = ref.watch(desktopConnectionModeProvider);
+    final label = switch ((mode.tun, mode.systemProxy)) {
       (true, true) => text.vpnConnectionModeCombined,
       (true, false) => text.vpnConnectionModeTun,
       (false, true) => text.systemProxy,
@@ -96,22 +87,22 @@ class _ConnectionModeItem extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
             child: Builder(
               builder: (context) => RadioGroup<bool>(
-                groupValue: enableTun ? true : (proxy ? false : null),
+                groupValue: mode.tun ? true : (mode.systemProxy ? false : null),
                 onChanged: (value) => Navigator.of(context).pop(value),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ListItem<bool>.radio(
-                      value: true,
-                      onTap: () => Navigator.of(context).pop(true),
-                      title: Text(text.vpnConnectionModeTun),
-                      subtitle: Text(text.vpnConnectionModeTunDescription),
-                    ),
-                    ListItem<bool>.radio(
                       value: false,
                       onTap: () => Navigator.of(context).pop(false),
                       title: Text(text.systemProxy),
                       subtitle: Text(text.vpnConnectionModeProxyDescription),
+                    ),
+                    ListItem<bool>.radio(
+                      value: true,
+                      onTap: () => Navigator.of(context).pop(true),
+                      title: Text(text.vpnConnectionModeTun),
+                      subtitle: Text(text.vpnConnectionModeTunDescription),
                     ),
                   ],
                 ),
@@ -121,14 +112,8 @@ class _ConnectionModeItem extends ConsumerWidget {
         );
         if (selected == null || !context.mounted) return;
         ref
-            .read(appSettingProvider.notifier)
-            .update((state) => state.copyWith(vpnDefaultsPending: false));
-        ref
-            .read(networkSettingProvider.notifier)
-            .update((state) => state.copyWith(systemProxy: !selected));
-        ref
-            .read(patchClashConfigProvider.notifier)
-            .update((state) => state.copyWith.tun(enable: selected));
+            .read(setupActionProvider.notifier)
+            .setDesktopConnectionMode(tun: selected);
       },
     );
   }

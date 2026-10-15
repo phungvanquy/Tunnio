@@ -294,7 +294,12 @@ sealed files. Native reachability health checks and Auto/Fallback continue while
 and system-proxy results. Observations carry native session/revision identities. Core availability and optimistic
 command acknowledgements are not proof of an active VPN. Home requests transitions through `SetupAction`; Android
 `ServiceStateMachine` and desktop lifecycle code remain authoritative. Passive attachment/resume queries must not
-mutate runtime state. Fresh-install VPN/TUN defaults apply on explicit Connect, not during import.
+mutate runtime state. Fresh-install capture defaults apply on explicit Connect, not during import: Windows uses
+system proxy with TUN off; macOS/Linux use TUN with system proxy off; Android keeps VPN enabled. Settings previews
+the same resolved defaults. Saved capture choices, including combined or manual modes, remain unchanged. Explicit
+mode selections go through `SetupAction.setDesktopConnectionMode`. Home offers system proxy when requested TUN is
+inactive; choosing it changes the saved mode and requests Connect through the existing lifecycle. Denied TUN
+authorization is retried only on explicit Connect or TUN selection, not background startup.
 
 Provider files in `lib/providers/`:
 

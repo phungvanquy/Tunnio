@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/database.dart';
@@ -59,7 +60,11 @@ void main() {
         .update((state) => state.copyWith(vpnDefaultsPending: true));
     await pumpSettings(tester);
     expect(find.text('Connection mode'), findsOneWidget);
-    expect(find.text('VPN (TUN) + system proxy'), findsOneWidget);
+    expect(
+      find.text(system.isWindows ? 'System proxy' : 'VPN (TUN)'),
+      findsOneWidget,
+    );
+    expect(find.text('VPN (TUN) + system proxy'), findsNothing);
 
     await selectMode(tester, 'System proxy');
 
@@ -98,7 +103,7 @@ void main() {
       await tester.tap(find.text('Connection mode'));
       await tester.pumpAndSettle();
       expect(
-        find.textContaining('Recommended for apps and games'),
+        find.textContaining('Routes traffic for apps and games'),
         findsOneWidget,
       );
       expect(

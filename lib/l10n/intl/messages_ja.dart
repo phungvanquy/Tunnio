@@ -1025,7 +1025,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vpnConnectionModeTun": MessageLookupByLibrary.simpleMessage("VPN（TUN）"),
     "vpnConnectionModeTunDescription": MessageLookupByLibrary.simpleMessage(
-      "アプリやゲームにおすすめです。端末の通信を VPN 経由にします。管理者権限が必要な場合があります。",
+      "システムプロキシ設定に従わないアプリを含め、アプリやゲームの通信を転送します。管理者権限が必要な場合があります。",
     ),
     "vpnCurrentNode": MessageLookupByLibrary.simpleMessage("現在のノード"),
     "vpnCustomRouting": MessageLookupByLibrary.simpleMessage("カスタムルーティング"),
@@ -1147,6 +1147,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnSuspended": MessageLookupByLibrary.simpleMessage("一時停止中"),
     "vpnTestLatency": MessageLookupByLibrary.simpleMessage("遅延をテスト"),
     "vpnTip": MessageLookupByLibrary.simpleMessage("変更はVPNの再起動後に有効になります"),
+    "vpnTunUnavailable": MessageLookupByLibrary.simpleMessage(
+      "VPN（TUN）は有効になっていません。対応アプリにはシステムプロキシを使用できます。それ以外のアプリは直接接続します。",
+    ),
+    "vpnUseSystemProxy": MessageLookupByLibrary.simpleMessage("システムプロキシを使用"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
     "yearsAgo": m33,

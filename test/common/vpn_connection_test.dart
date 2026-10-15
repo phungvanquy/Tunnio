@@ -3,6 +3,48 @@ import 'package:fl_clash/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('fresh Windows connections use only system proxy', () {
+    expect(
+      resolveDesktopConnectionMode(
+        defaultsPending: true,
+        isWindows: true,
+        tun: true,
+        systemProxy: false,
+      ),
+      (tun: false, systemProxy: true),
+    );
+  });
+
+  test('fresh connections on other desktops use only TUN', () {
+    expect(
+      resolveDesktopConnectionMode(
+        defaultsPending: true,
+        isWindows: false,
+        tun: false,
+        systemProxy: true,
+      ),
+      (tun: true, systemProxy: false),
+    );
+  });
+
+  test('saved desktop capture choices are preserved on every platform', () {
+    for (final windows in [false, true]) {
+      for (final tun in [false, true]) {
+        for (final proxy in [false, true]) {
+          expect(
+            resolveDesktopConnectionMode(
+              defaultsPending: false,
+              isWindows: windows,
+              tun: tun,
+              systemProxy: proxy,
+            ),
+            (tun: tun, systemProxy: proxy),
+          );
+        }
+      }
+    }
+  });
+
   const core = CoreRunObservation(
     session: 'desktop',
     revision: 1,

@@ -1238,7 +1238,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vpnConnectionModeTun": MessageLookupByLibrary.simpleMessage("VPN (TUN)"),
     "vpnConnectionModeTunDescription": MessageLookupByLibrary.simpleMessage(
-      "Recommended for apps and games. Routes device traffic through the VPN and may require administrator permission.",
+      "Routes traffic for apps and games, including those that ignore system proxy settings. May require administrator permission.",
     ),
     "vpnCurrentNode": MessageLookupByLibrary.simpleMessage("Current node"),
     "vpnCustomRouting": MessageLookupByLibrary.simpleMessage("Custom routing"),
@@ -1385,6 +1385,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnTestLatency": MessageLookupByLibrary.simpleMessage("Test latency"),
     "vpnTip": MessageLookupByLibrary.simpleMessage(
       "Changes take effect after restarting the VPN",
+    ),
+    "vpnTunUnavailable": MessageLookupByLibrary.simpleMessage(
+      "VPN (TUN) is not active. You can use system proxy for apps that support it. Other apps will connect directly.",
+    ),
+    "vpnUseSystemProxy": MessageLookupByLibrary.simpleMessage(
+      "Use system proxy",
     ),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage(
       "WebDAV configuration",

@@ -486,6 +486,128 @@ void main() {
     expect(setup.requests, [false]);
   });
 
+  for (final proxyInstalled in [false, true]) {
+    homeTest('inactive TUN offers explicit proxy recovery ($proxyInstalled)', (
+      tester,
+    ) async {
+      setProfile(configured());
+      container
+          .read(patchClashConfigProvider.notifier)
+          .update((value) => value.copyWith.tun(enable: true));
+      container
+          .read(networkSettingProvider.notifier)
+          .update((value) => value.copyWith(systemProxy: proxyInstalled));
+      container
+          .read(coreRunStateProvider.notifier)
+          .observe(
+            const CoreRunObservation(
+              session: 'fallback',
+              revision: 1,
+              active: true,
+              requested: true,
+              mixedPort: 7890,
+            ),
+          );
+      container.read(systemProxyStateProvider.notifier).value =
+          SystemProxyObservation(installed: proxyInstalled, port: 7890);
+      await pump(tester);
+
+      final recovery = find.byKey(const Key('vpn-use-system-proxy'));
+      expect(recovery, findsOneWidget);
+      expect(
+        find.textContaining('Other apps will connect directly'),
+        findsOneWidget,
+      );
+      expect(container.read(patchClashConfigProvider).tun.enable, isTrue);
+      expect(setup.requests, isEmpty);
+
+      setup.gate = Completer<bool>();
+      await tester.ensureVisible(recovery);
+      await tester.tap(recovery);
+      await tester.tap(recovery);
+      expect(setup.requests, [true]);
+      expect(container.read(patchClashConfigProvider).tun.enable, isFalse);
+      expect(container.read(networkSettingProvider).systemProxy, isTrue);
+      expect(container.read(appSettingProvider).vpnDefaultsPending, isFalse);
+      setup.gate!.complete(true);
+      await tester.pumpAndSettle();
+
+      expect(recovery, findsNothing);
+      expect(find.text('Connected'), findsNothing);
+      expect(
+        find.text(
+          proxyInstalled
+              ? 'Connected · system proxy only'
+              : 'Local proxy only · VPN is not active',
+        ),
+        findsOneWidget,
+      );
+    });
+  }
+
+  homeTest(
+    'failed TUN start offers recovery on narrow screens with large text',
+    (tester) async {
+      setProfile(configured());
+      container
+          .read(patchClashConfigProvider.notifier)
+          .update((value) => value.copyWith.tun(enable: true));
+      container.read(vpnFailureProvider.notifier).value = 'start_failed';
+      await pump(tester, size: const Size(320, 640), scale: 2.5);
+
+      final recovery = find.byKey(const Key('vpn-use-system-proxy'));
+      await tester.scrollUntilVisible(
+        recovery,
+        100,
+        scrollable: find.descendant(
+          of: find.byKey(const Key('vpn-controls-scroll')),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.tap(recovery);
+      await tester.pump();
+
+      expect(setup.requests, [true]);
+      expect(container.read(patchClashConfigProvider).tun.enable, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final failure in [
+    'recovery_required',
+    'stop_failed',
+    'state_unavailable',
+    'core_unavailable',
+  ]) {
+    homeTest('proxy recovery does not bypass $failure', (tester) async {
+      setProfile(configured());
+      container
+          .read(patchClashConfigProvider.notifier)
+          .update((value) => value.copyWith.tun(enable: true));
+      container.read(vpnFailureProvider.notifier).value = failure;
+      await pump(tester);
+
+      expect(find.byKey(const Key('vpn-use-system-proxy')), findsNothing);
+      expect(setup.requests, isEmpty);
+    });
+  }
+
+  homeTest('proxy recovery stays hidden during a TUN transition', (
+    tester,
+  ) async {
+    setProfile(configured());
+    container
+        .read(patchClashConfigProvider.notifier)
+        .update((value) => value.copyWith.tun(enable: true));
+    container.read(vpnPendingProvider.notifier).value = true;
+    await pump(tester);
+    expect(find.byKey(const Key('vpn-use-system-proxy')), findsNothing);
+
+    container.read(vpnPendingProvider.notifier).value = false;
+    await tester.pump();
+    expect(find.byKey(const Key('vpn-use-system-proxy')), findsNothing);
+  });
+
   homeTest('connection and status use green when connected and gray when off', (
     tester,
   ) async {

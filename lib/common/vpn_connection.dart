@@ -1,5 +1,14 @@
 import 'package:fl_clash/models/models.dart';
 
+({bool tun, bool systemProxy}) resolveDesktopConnectionMode({
+  required bool defaultsPending,
+  required bool isWindows,
+  required bool tun,
+  required bool systemProxy,
+}) => defaultsPending
+    ? (tun: !isWindows, systemProxy: isWindows)
+    : (tun: tun, systemProxy: systemProxy);
+
 class RunObservationCursor {
   String? _session;
   int _revision = -1;

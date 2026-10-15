@@ -1,6 +1,22 @@
 part of '../state.dart';
 
 @riverpod
+({bool tun, bool systemProxy}) desktopConnectionMode(Ref ref) {
+  return resolveDesktopConnectionMode(
+    defaultsPending: ref.watch(
+      appSettingProvider.select((value) => value.vpnDefaultsPending),
+    ),
+    isWindows: system.isWindows,
+    tun: ref.watch(
+      patchClashConfigProvider.select((value) => value.tun.enable),
+    ),
+    systemProxy: ref.watch(
+      networkSettingProvider.select((value) => value.systemProxy),
+    ),
+  );
+}
+
+@riverpod
 VpnConnection vpnConnection(Ref ref) {
   return deriveVpnConnection(
     android: system.isAndroid,

@@ -217,10 +217,17 @@ class _ConnectionControlState extends ConsumerState<_ConnectionControl> {
     }
   }
 
+  Future<void> _useSystemProxy() async {
+    if (_submittedIntent != null) return;
+    ref.read(setupActionProvider.notifier).setDesktopConnectionMode(tun: false);
+    await _toggle(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final profile = widget.profile;
     final observed = ref.watch(vpnConnectionProvider);
+    final coreReady = ref.watch(coreStatusProvider) == CoreStatus.connected;
     final ready =
         ref.watch(initProvider) &&
         profile.snapshot.generation != null &&
@@ -248,6 +255,15 @@ class _ConnectionControlState extends ConsumerState<_ConnectionControl> {
         observed.phase == VpnConnectionPhase.checking ||
         observed.phase == VpnConnectionPhase.connecting ||
         observed.phase == VpnConnectionPhase.disconnecting;
+    final tunUnavailable =
+        system.isDesktop &&
+        ref.watch(
+          patchClashConfigProvider.select((value) => value.tun.enable),
+        ) &&
+        (observed.phase == VpnConnectionPhase.localProxy ||
+            observed.phase == VpnConnectionPhase.proxyOnly ||
+            (observed.phase == VpnConnectionPhase.failed &&
+                observed.failure == 'start_failed'));
     final dark = Theme.of(context).brightness == Brightness.dark;
     final connected = observed.phase == VpnConnectionPhase.connected;
     final tone = switch (observed.phase) {
@@ -423,6 +439,18 @@ class _ConnectionControlState extends ConsumerState<_ConnectionControl> {
                           : const Icon(Icons.refresh),
                       label: Text(_checking ? text.vpnChecking : text.vpnRetry),
                     ),
+                  if (tunUnavailable) ...[
+                    const SizedBox(height: 12),
+                    Text(text.vpnTunUnavailable, textAlign: TextAlign.center),
+                    TextButton.icon(
+                      key: const Key('vpn-use-system-proxy'),
+                      onPressed: ready && _submittedIntent == null && coreReady
+                          ? _useSystemProxy
+                          : null,
+                      icon: const Icon(Icons.settings_ethernet),
+                      label: Text(text.vpnUseSystemProxy),
+                    ),
+                  ],
                   if (profile.snapshot.routing == VpnRoutingMode.custom) ...[
                     const SizedBox(height: 12),
                     Text(text.vpnCustomRouting, textAlign: TextAlign.center),

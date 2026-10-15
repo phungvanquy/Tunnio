@@ -892,7 +892,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vpnConnectionModeTun": MessageLookupByLibrary.simpleMessage("VPN（TUN）"),
     "vpnConnectionModeTunDescription": MessageLookupByLibrary.simpleMessage(
-      "推荐用于应用和游戏。通过 VPN 路由设备流量，可能需要管理员权限。",
+      "为应用和游戏转发流量，包括不遵循系统代理设置的应用。可能需要管理员权限。",
     ),
     "vpnCurrentNode": MessageLookupByLibrary.simpleMessage("当前节点"),
     "vpnCustomRouting": MessageLookupByLibrary.simpleMessage("自定义路由"),
@@ -1004,6 +1004,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnSuspended": MessageLookupByLibrary.simpleMessage("已暂停"),
     "vpnTestLatency": MessageLookupByLibrary.simpleMessage("测试延迟"),
     "vpnTip": MessageLookupByLibrary.simpleMessage("重启VPN后改变生效"),
+    "vpnTunUnavailable": MessageLookupByLibrary.simpleMessage(
+      "VPN（TUN）未启用。您可以使用系统代理连接支持它的应用，其他应用将直接连接。",
+    ),
+    "vpnUseSystemProxy": MessageLookupByLibrary.simpleMessage("使用系统代理"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
     "yearsAgo": m33,

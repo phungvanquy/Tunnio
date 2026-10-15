@@ -260,10 +260,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Recommended for apps and games. Routes device traffic through the VPN and may require administrator permission.`
+  /// `Routes traffic for apps and games, including those that ignore system proxy settings. May require administrator permission.`
   String get vpnConnectionModeTunDescription {
     return Intl.message(
-      'Recommended for apps and games. Routes device traffic through the VPN and may require administrator permission.',
+      'Routes traffic for apps and games, including those that ignore system proxy settings. May require administrator permission.',
       name: 'vpnConnectionModeTunDescription',
       desc: '',
       args: [],
@@ -328,6 +328,26 @@ class AppLocalizations {
   /// `Suspended`
   String get vpnSuspended {
     return Intl.message('Suspended', name: 'vpnSuspended', desc: '', args: []);
+  }
+
+  /// `VPN (TUN) is not active. You can use system proxy for apps that support it. Other apps will connect directly.`
+  String get vpnTunUnavailable {
+    return Intl.message(
+      'VPN (TUN) is not active. You can use system proxy for apps that support it. Other apps will connect directly.',
+      name: 'vpnTunUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use system proxy`
+  String get vpnUseSystemProxy {
+    return Intl.message(
+      'Use system proxy',
+      name: 'vpnUseSystemProxy',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Connection needs attention`

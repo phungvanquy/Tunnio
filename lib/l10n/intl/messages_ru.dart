@@ -1295,7 +1295,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vpnConnectionModeTun": MessageLookupByLibrary.simpleMessage("VPN (TUN)"),
     "vpnConnectionModeTunDescription": MessageLookupByLibrary.simpleMessage(
-      "Рекомендуется для приложений и игр. Направляет трафик устройства через VPN. Могут потребоваться права администратора.",
+      "Направляет трафик приложений и игр, включая те, что игнорируют системный прокси. Могут потребоваться права администратора.",
     ),
     "vpnCurrentNode": MessageLookupByLibrary.simpleMessage("Текущий узел"),
     "vpnCustomRouting": MessageLookupByLibrary.simpleMessage(
@@ -1446,6 +1446,12 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vpnTip": MessageLookupByLibrary.simpleMessage(
       "Изменения вступят в силу после перезапуска VPN",
+    ),
+    "vpnTunUnavailable": MessageLookupByLibrary.simpleMessage(
+      "VPN (TUN) не активен. Можно использовать системный прокси для поддерживающих его приложений. Остальные приложения будут подключаться напрямую.",
+    ),
+    "vpnUseSystemProxy": MessageLookupByLibrary.simpleMessage(
+      "Использовать системный прокси",
     ),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage(
       "Настройка WebDAV",

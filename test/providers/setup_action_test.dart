@@ -86,12 +86,19 @@ class TestSetupAction extends SetupAction {
   int observationRevision = 0;
   Error? coreRunningError;
   int authorizeCalls = 0;
+  int configUpdates = 0;
   AuthorizeCode authorizeResult = AuthorizeCode.none;
+  Completer<AuthorizeCode>? authorizeGate;
+
+  @override
+  Future<void> updateConfigDebounce() async {
+    configUpdates++;
+  }
 
   @override
   Future<AuthorizeCode> authorizeCore() async {
     authorizeCalls++;
-    return authorizeResult;
+    return await authorizeGate?.future ?? authorizeResult;
   }
 
   @override
@@ -246,15 +253,20 @@ void main() {
         container
             .read(appSettingProvider.notifier)
             .update((value) => value.copyWith(vpnDefaultsPending: true));
+        final mode = container.read(desktopConnectionModeProvider);
         await action.applyProfile();
         expect(container.read(patchClashConfigProvider).tun.enable, isFalse);
         await action.setRunning(true);
-        expect(container.read(patchClashConfigProvider).tun.enable, isTrue);
-        expect(container.read(appSettingProvider).vpnDefaultsPending, isFalse);
+        expect(container.read(patchClashConfigProvider).tun.enable, mode.tun);
         expect(
-          (await preferences.getConfig())!.patchClashConfig.tun.enable,
-          isTrue,
+          container.read(networkSettingProvider).systemProxy,
+          mode.systemProxy,
         );
+        expect(container.read(appSettingProvider).vpnDefaultsPending, isFalse);
+        final saved = (await preferences.getConfig())!;
+        expect(saved.patchClashConfig.tun.enable, mode.tun);
+        expect(saved.networkProps.systemProxy, mode.systemProxy);
+        expect(saved.appSettingProps.vpnDefaultsPending, isFalse);
       },
     );
 
@@ -262,10 +274,38 @@ void main() {
       'migrated desktop capture preferences are retained on connect',
       () async {
         markInitialized();
-        await action.setRunning(true);
-        expect(container.read(patchClashConfigProvider).tun.enable, isFalse);
+        for (final tun in [false, true]) {
+          for (final proxy in [false, true]) {
+            container
+                .read(patchClashConfigProvider.notifier)
+                .update((value) => value.copyWith.tun(enable: tun));
+            container
+                .read(networkSettingProvider.notifier)
+                .update((value) => value.copyWith(systemProxy: proxy));
+            await action.setRunning(true);
+            expect(container.read(patchClashConfigProvider).tun.enable, tun);
+            expect(container.read(networkSettingProvider).systemProxy, proxy);
+            await action.setRunning(false);
+          }
+        }
       },
     );
+
+    for (final tun in [false, true]) {
+      test('explicit mode ($tun) survives first Connect', () async {
+        markInitialized();
+        container
+            .read(appSettingProvider.notifier)
+            .update((value) => value.copyWith(vpnDefaultsPending: true));
+        action.setDesktopConnectionMode(tun: tun);
+
+        await action.setRunning(true);
+
+        expect(container.read(appSettingProvider).vpnDefaultsPending, isFalse);
+        expect(container.read(patchClashConfigProvider).tun.enable, tun);
+        expect(container.read(networkSettingProvider).systemProxy, !tun);
+      });
+    }
 
     test(
       'a false listener result is a failed start, not a running timer',
@@ -577,6 +617,104 @@ void main() {
   });
 
   group('requestAdmin', () {
+    test(
+      'explicit retry does not duplicate an authorization in flight',
+      () async {
+        markInitialized();
+        action.setDesktopConnectionMode(tun: true);
+        action.authorizeGate = Completer<AuthorizeCode>();
+        final pending = action.requestAdmin(true);
+
+        action.setDesktopConnectionMode(tun: true);
+        await action.setRunning(true);
+        await action.requestAdmin(true);
+
+        expect(action.authorizeCalls, 1);
+        action.authorizeGate!.complete(AuthorizeCode.none);
+        expect(await pending, isTrue);
+        expect(
+          container.read(authorizedTunEnableProvider),
+          TunAuthorizationState.authorized,
+        );
+      },
+    );
+
+    test('explicit Connect retries denied TUN authorization', () async {
+      markInitialized();
+      action.setDesktopConnectionMode(tun: true);
+      action.authorizeResult = AuthorizeCode.error;
+      await action.requestAdmin(true);
+
+      await action.setRunning(true);
+      expect(
+        container.read(authorizedTunEnableProvider),
+        TunAuthorizationState.none,
+      );
+      action.authorizeResult = AuthorizeCode.none;
+      await action.requestAdmin(true);
+      expect(action.authorizeCalls, 2);
+      expect(
+        container.read(authorizedTunEnableProvider),
+        TunAuthorizationState.authorized,
+      );
+    });
+
+    test('background startup does not retry denied authorization', () async {
+      action.setDesktopConnectionMode(tun: true);
+      action.authorizeResult = AuthorizeCode.error;
+      await action.requestAdmin(true);
+
+      await action.setRunning(true, initialize: true);
+      await action.requestAdmin(true);
+
+      expect(action.authorizeCalls, 1);
+      expect(
+        container.read(authorizedTunEnableProvider),
+        TunAuthorizationState.unauthorized,
+      );
+    });
+
+    test(
+      'reselecting TUN retries even when the saved mode is unchanged',
+      () async {
+        markInitialized();
+        action.setDesktopConnectionMode(tun: true);
+        await action.setRunning(true);
+        action.authorizeResult = AuthorizeCode.error;
+        await action.requestAdmin(true);
+
+        action.setDesktopConnectionMode(tun: true);
+
+        expect(action.configUpdates, 1);
+        expect(
+          container.read(authorizedTunEnableProvider),
+          TunAuthorizationState.none,
+        );
+      },
+    );
+
+    test(
+      'switching to system proxy does not retry TUN authorization',
+      () async {
+        markInitialized();
+        action.authorizeResult = AuthorizeCode.error;
+        await action.requestAdmin(true);
+
+        action.setDesktopConnectionMode(tun: false);
+        await action.setRunning(true);
+        await action.requestAdmin(
+          container.read(patchClashConfigProvider).tun.enable,
+        );
+
+        expect(action.authorizeCalls, 1);
+        expect(container.read(networkSettingProvider).systemProxy, isTrue);
+        expect(
+          container.read(authorizedTunEnableProvider),
+          TunAuthorizationState.unauthorized,
+        );
+      },
+    );
+
     test('never asks for authorization while tun is disabled', () async {
       expect(await action.requestAdmin(false), isTrue);
 

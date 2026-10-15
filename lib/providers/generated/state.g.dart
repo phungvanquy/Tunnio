@@ -9,6 +9,56 @@ part of '../state.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(desktopConnectionMode)
+final desktopConnectionModeProvider = DesktopConnectionModeProvider._();
+
+final class DesktopConnectionModeProvider
+    extends
+        $FunctionalProvider<
+          ({bool systemProxy, bool tun}),
+          ({bool systemProxy, bool tun}),
+          ({bool systemProxy, bool tun})
+        >
+    with $Provider<({bool systemProxy, bool tun})> {
+  DesktopConnectionModeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'desktopConnectionModeProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$desktopConnectionModeHash();
+
+  @$internal
+  @override
+  $ProviderElement<({bool systemProxy, bool tun})> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ({bool systemProxy, bool tun}) create(Ref ref) {
+    return desktopConnectionMode(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(({bool systemProxy, bool tun}) value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<({bool systemProxy, bool tun})>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$desktopConnectionModeHash() =>
+    r'a9fdfa7c5dbd57894a0b7f7f630e394a9fd71332';
+
 @ProviderFor(vpnConnection)
 final vpnConnectionProvider = VpnConnectionProvider._();
 
